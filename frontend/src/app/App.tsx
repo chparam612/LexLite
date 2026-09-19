@@ -9,6 +9,7 @@ import { LandingPage } from '../pages/LandingPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { DocumentLibraryPage } from '../pages/DocumentLibraryPage';
 import { checkHealth } from '../services/api';
 
 const queryClient = new QueryClient({
@@ -74,10 +75,7 @@ export const App: React.FC = () => {
                   path="/documents"
                   element={
                     <ProtectedRoute>
-                      <SimplePageLayout
-                        title="Document Library"
-                        description="Browse, search, and manage your legal documents."
-                      />
+                      <DocumentLibraryPage />
                     </ProtectedRoute>
                   }
                 />
