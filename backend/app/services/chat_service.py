@@ -231,6 +231,8 @@ class ChatService:
         )
 
         # 6. Record Citations and Claims
+        claim_records: List[AnswerClaim] = []
+        evidence_records: List[ClaimEvidence] = []
         citation_records: List[Citation] = []
         citation_responses: List[CitationResponse] = []
 
@@ -243,6 +245,7 @@ class ChatService:
                 support_status=claim_data.support_status
             )
             db.add(claim_rec)
+            claim_records.append(claim_rec)
             db.flush()
 
             # Create claim evidence
@@ -254,6 +257,7 @@ class ChatService:
                 evidence_type="direct_quote"
             )
             db.add(evidence)
+            evidence_records.append(evidence)
 
             # Create citation
             cit = Citation(
@@ -268,6 +272,26 @@ class ChatService:
             citation_records.append(cit)
 
         db.commit()
+
+        # 7. Execute Claim-Level Citation Verification
+        from app.services.verification_service import VerificationService
+        verification_service = VerificationService()
+        grounding_score = verification_service.verify_claims_and_citations(
+            db=db,
+            grounded_resp=grounded_resp,
+            created_claims=claim_records,
+            created_evidence=evidence_records,
+            created_citations=citation_records
+        )
+
+        if grounding_score < 0.5 and len(grounded_resp.claims) > 0:
+            assistant_msg.content += (
+                "\n\n> [!WARNING]\n"
+                "> **Grounding Warning:** Certain claims in this answer could not be verified "
+                "against the cited document text."
+            )
+            db.commit()
+
         db.refresh(assistant_msg)
 
         # Format citation responses with document titles
