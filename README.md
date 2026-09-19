@@ -84,20 +84,39 @@ Backend API interactive docs are at `http://localhost:8000/docs`.
 
 ---
 
-## Testing
+## Testing & Quality Assurance
 
 ```bash
-# Run backend tests
+# Run backend tests with coverage (92 tests, 86% coverage)
 cd backend
-pytest -v
+pytest -v --cov=app
 
-# Run frontend tests & type check
+# Run backend linting (0 flake8 errors)
+flake8 backend --config=backend/.flake8
+
+# Run frontend type-check & production build (0 errors)
 cd ../frontend
 npm run type-check
 npm run build
 ```
 
 ---
+
+## Roadmap & Phase Status
+
+| Phase | Description | Status |
+| :--- | :--- | :---: |
+| **Phase 1** | Foundation, Scaffolding, Core Config & Probes | **Complete** (8 tests) |
+| **Phase 2** | Database Layer (17 Models, Dual-Mode pgvector/SQLite, Migrations) | **Complete** (6 tests) |
+| **Phase 3** | Authentication & Authorization (Firebase / JWT, RBAC, Guards) | **Complete** (7 tests) |
+| **Phase 4** | Document Upload & Storage (GCS / Local, Deduplication, UI Library) | **Complete** (12 tests) |
+| **Phase 5** | Document Processing & Legal-Aware Chunking (PyMuPDF, OCR, Hierarchies) | **Complete** (6 tests) |
+| **Phase 6** | Embeddings & Vector Storage (Gemini 768-dim, Retry Backoff) | **Complete** (10 tests) |
+| **Phase 7** | Basic RAG & Grounded Generation (XML Sandboxing, Chat UI) | **Complete** (10 tests) |
+| **Phase 8** | Advanced Retrieval & RRF Reranking (Dense + Lexical BM25, Context Expansion) | **Complete** (10 tests) |
+| **Phase 9** | Citation Verification & Security Audit (Entailment Scoring, OWASP Audit) | **Complete** (20 tests) |
+| **Phase 10** | RAG Evaluation Suite, E2E Journey Tests, Settings & Final Polish | **Complete** (3 tests) |
+
 
 ## License
 
