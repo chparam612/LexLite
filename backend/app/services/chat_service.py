@@ -190,11 +190,11 @@ class ChatService:
         conv.updated_at = datetime.now(timezone.utc)
         db.commit()
 
-        # 2. Dense Retrieval
+        # 2. Hybrid Retrieval (Dense + Keyword + RRF + Rerank + Expansion)
         doc_ids = [d.document_id for d in conv.documents] if conv.documents else None
 
         t0 = time.time()
-        hits = self.retrieval_service.dense_search(
+        hits = self.retrieval_service.hybrid_search(
             db=db,
             user_id=user.id,
             query=clean_content,
@@ -226,7 +226,7 @@ class ChatService:
             message_id=assistant_msg.id,
             query=clean_content,
             hits=hits,
-            retrieval_method="dense",
+            retrieval_method="hybrid",
             latency_ms=latency_ms
         )
 

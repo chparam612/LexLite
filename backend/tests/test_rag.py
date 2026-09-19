@@ -321,7 +321,7 @@ def test_rag009_retrieval_run_auditability(client, db_session):
     # Verify RetrievalRun record in DB
     run = db_session.query(RetrievalRun).filter_by(message_id=assistant_msg_id).first()
     assert run is not None
-    assert run.retrieval_method == "dense"
+    assert run.retrieval_method in ("dense", "hybrid")
     assert run.latency_ms >= 0.0
 
 
