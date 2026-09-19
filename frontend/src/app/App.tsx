@@ -11,6 +11,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { DocumentLibraryPage } from '../pages/DocumentLibraryPage';
 import { ChatPage } from '../pages/ChatPage';
+import { SettingsPage } from '../pages/SettingsPage';
 import { checkHealth } from '../services/api';
 
 const queryClient = new QueryClient({
@@ -92,10 +93,7 @@ export const App: React.FC = () => {
                   path="/settings"
                   element={
                     <ProtectedRoute>
-                      <SimplePageLayout
-                        title="Account & Preferences"
-                        description="Manage security settings, data retention, and preferences."
-                      />
+                      <SettingsPage />
                     </ProtectedRoute>
                   }
                 />

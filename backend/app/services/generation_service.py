@@ -95,18 +95,22 @@ class GenerationService:
             )
 
         top_hit = hits[0]
-        # Extract first sentence or excerpt from top hit
         content_snippet = top_hit.content.strip()
-        first_sentence = content_snippet.split(".")[0] + "." if "." in content_snippet else content_snippet[:150]
+        lines = [line.strip() for line in content_snippet.split("\n") if line.strip()]
+
+        if len(lines) > 1 and len(lines[0]) < 50:
+            excerpt = f"{lines[0]} {lines[1]}"
+        else:
+            excerpt = content_snippet[:300].strip()
 
         answer_text = (
             f"Based on **{top_hit.document_title}** (Page {top_hit.page_start}), "
-            f"{first_sentence.strip()}"
+            f"{excerpt}"
         )
 
         claim = GroundedClaim(
-            claim_text=first_sentence.strip(),
-            quote=first_sentence.strip(),
+            claim_text=excerpt,
+            quote=lines[1] if (len(lines) > 1 and len(lines[0]) < 50) else excerpt,
             chunk_id=top_hit.chunk_id,
             page_number=top_hit.page_start,
             support_status="supported"
