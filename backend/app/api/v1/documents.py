@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user
@@ -11,12 +11,14 @@ from app.schemas.document import (
     DocumentUploadResponse
 )
 from app.services.document_service import DocumentService
+from app.workers.processing_worker import DocumentProcessingPipeline
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
 
 @router.post("/upload", response_model=DocumentUploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: Optional[str] = Form(None),
     jurisdiction: Optional[str] = Form(None),
@@ -36,6 +38,12 @@ async def upload_document(
         title=title,
         jurisdiction=jurisdiction
     )
+
+    if doc.versions:
+        background_tasks.add_task(
+            DocumentProcessingPipeline.process_in_background,
+            doc.versions[-1].id
+        )
 
     return DocumentUploadResponse(
         document=DocumentResponse.model_validate(doc),
@@ -95,10 +103,17 @@ def get_document_status(
 @router.post("/{document_id}/retry", response_model=DocumentResponse, status_code=status.HTTP_200_OK)
 def retry_document_processing(
     document_id: str,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     Retry processing on a failed document job.
     """
-    return DocumentService.retry_processing(db=db, document_id=document_id, owner_id=current_user.id)
+    doc = DocumentService.retry_processing(db=db, document_id=document_id, owner_id=current_user.id)
+    if doc.versions:
+        background_tasks.add_task(
+            DocumentProcessingPipeline.process_in_background,
+            doc.versions[-1].id
+        )
+    return doc
