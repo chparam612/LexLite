@@ -54,3 +54,13 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def create_sample_pdf_bytes(text: str = "Sample Legal Provision") -> bytes:
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 72), text)
+    data = doc.tobytes()
+    doc.close()
+    return data

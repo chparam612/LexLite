@@ -157,7 +157,23 @@ class DocumentProcessingPipeline:
                 )
                 db.add(chunk_rec)
 
-            # 5. Success
+            db.commit()
+
+            # 5. Embeddings
+            doc.status = "embedding"
+            db.commit()
+
+            created_chunks = (
+                db.query(DocumentChunk)
+                .filter_by(version_id=version_id)
+                .order_by(DocumentChunk.chunk_index)
+                .all()
+            )
+            from app.services.embedding_service import EmbeddingService
+            embedding_service = EmbeddingService()
+            emb_count = embedding_service.generate_and_store_embeddings(db, created_chunks)
+
+            # 6. Success
             doc.status = "completed"
             version.extraction_status = "completed"
             job.status = "completed"
@@ -166,7 +182,7 @@ class DocumentProcessingPipeline:
 
             logger.info(
                 f"Processing completed for {doc.id}: {len(extracted_pages)} pages, "
-                f"{len(section_db_records)} sections, {len(chunks)} chunks."
+                f"{len(section_db_records)} sections, {len(chunks)} chunks, {emb_count} embeddings."
             )
             return True
 

@@ -10,6 +10,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { DocumentLibraryPage } from '../pages/DocumentLibraryPage';
+import { ChatPage } from '../pages/ChatPage';
 import { checkHealth } from '../services/api';
 
 const queryClient = new QueryClient({
@@ -83,10 +84,7 @@ export const App: React.FC = () => {
                   path="/chat"
                   element={
                     <ProtectedRoute>
-                      <SimplePageLayout
-                        title="Chat Workspace"
-                        description="Ask natural language questions grounded in your uploaded documents."
-                      />
+                      <ChatPage />
                     </ProtectedRoute>
                   }
                 />
