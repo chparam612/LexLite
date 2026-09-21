@@ -3,15 +3,63 @@ import {
   ShieldCheck, 
   FileSearch, 
   CheckCircle2, 
-  BookOpen, 
   Lock, 
   Scale, 
   ArrowRight, 
-  FileText, 
-  Cpu, 
   AlertCircle 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const HOW_IT_WORKS_STEPS = [
+  {
+    step: 1,
+    title: 'Upload PDF',
+    description: 'Secure multi-tenant document upload with SHA-256 deduplication and encrypted storage.'
+  },
+  {
+    step: 2,
+    title: 'Legal Parsing',
+    description: 'Detects Articles, Sections, Clauses, Definitions, Exceptions, and Provisos with page-awareness.'
+  },
+  {
+    step: 3,
+    title: 'Hybrid Retrieval',
+    description: 'Combines pgvector dense semantic retrieval and keyword matching via Reciprocal Rank Fusion.'
+  },
+  {
+    step: 4,
+    title: 'Claim Verification',
+    description: 'Every statement is cross-checked against source text chunks to eliminate hallucinations.'
+  }
+];
+
+const CORE_FEATURES = [
+  {
+    icon: Scale,
+    iconColor: 'text-amber-600',
+    title: 'Rights & Obligations',
+    description: 'Clearly isolate affirmative covenants, negative obligations, and permitted actions across parties.'
+  },
+  {
+    icon: FileSearch,
+    iconColor: 'text-blue-600',
+    title: 'Deadlines & Penalties',
+    description: 'Locate termination notice periods, cure windows, late fees, and liquidated damage clauses.'
+  },
+  {
+    icon: AlertCircle,
+    iconColor: 'text-rose-600',
+    title: 'Conditions & Exceptions',
+    description: 'Never miss critical qualifiers ("provided that", "unless otherwise agreed", "subject to Section 4").'
+  }
+];
+
+const SECURITY_POINTS = [
+  'Firebase Token Authentication',
+  'IDOR Defense across all endpoints',
+  'Zero Stack Trace or Secret Leakage',
+  'Deterministic SHA-256 Storage Keys'
+];
 
 export const LandingPage: React.FC = () => {
   return (
@@ -59,45 +107,15 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex flex-col">
-              <div className="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold mb-4">
-                1
+            {HOW_IT_WORKS_STEPS.map((item) => (
+              <div key={item.step} className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex flex-col">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold mb-4">
+                  {item.step}
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-600">{item.description}</p>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload PDF</h3>
-              <p className="text-sm text-slate-600">
-                Secure multi-tenant document upload with SHA-256 deduplication and encrypted storage.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex flex-col">
-              <div className="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold mb-4">
-                2
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Legal Parsing</h3>
-              <p className="text-sm text-slate-600">
-                Detects Articles, Sections, Clauses, Definitions, Exceptions, and Provisos with page-awareness.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex flex-col">
-              <div className="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold mb-4">
-                3
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Hybrid Retrieval</h3>
-              <p className="text-sm text-slate-600">
-                Combines pgvector dense semantic retrieval and keyword matching via Reciprocal Rank Fusion.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex flex-col">
-              <div className="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center font-bold mb-4">
-                4
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Claim Verification</h3>
-              <p className="text-sm text-slate-600">
-                Every statement is cross-checked against source text chunks to eliminate hallucinations.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -111,29 +129,16 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <Scale className="w-8 h-8 text-amber-600 mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Rights & Obligations</h3>
-              <p className="text-sm text-slate-600">
-                Clearly isolate affirmative covenants, negative obligations, and permitted actions across parties.
-              </p>
-            </div>
-
-            <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <FileSearch className="w-8 h-8 text-blue-600 mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Deadlines & Penalties</h3>
-              <p className="text-sm text-slate-600">
-                Locate termination notice periods, cure windows, late fees, and liquidated damage clauses.
-              </p>
-            </div>
-
-            <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-              <AlertCircle className="w-8 h-8 text-rose-600 mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Conditions & Exceptions</h3>
-              <p className="text-sm text-slate-600">
-                Never miss critical qualifiers ("provided that", "unless otherwise agreed", "subject to Section 4").
-              </p>
-            </div>
+            {CORE_FEATURES.map((feat) => {
+              const Icon = feat.icon;
+              return (
+                <div key={feat.title} className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <Icon className={`w-8 h-8 ${feat.iconColor} mb-4`} />
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{feat.title}</h3>
+                  <p className="text-sm text-slate-600">{feat.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -152,27 +157,18 @@ export const LandingPage: React.FC = () => {
                 All uploaded documents are isolated per user tenant with cryptographically enforced access policies. Document texts are never used to train public models, and prompt injection defense prevents document content from compromising system instructions.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-300">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Firebase Token Authentication</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>IDOR Defense across all endpoints</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Zero Stack Trace or Secret Leakage</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Deterministic SHA-256 Storage Keys</span>
-                </div>
+                {SECURITY_POINTS.map((point) => (
+                  <div key={point} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{point}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* Footer */}
       <footer className="mt-auto bg-slate-100 border-t border-slate-200 py-8">

@@ -188,11 +188,16 @@ class DocumentProcessingPipeline:
 
         except Exception as e:
             logger.error(f"Document processing failed for {doc.id}: {str(e)}", exc_info=True)
-            doc.status = "failed"
-            version.extraction_status = "failed"
-            version.processing_error = str(e)
-            job.status = "failed"
-            job.error_message = str(e)
-            job.completed_at = datetime.now(timezone.utc)
-            db.commit()
+            db.rollback()
+            try:
+                doc.status = "failed"
+                version.extraction_status = "failed"
+                version.processing_error = str(e)
+                job.status = "failed"
+                job.error_message = str(e)
+                job.completed_at = datetime.now(timezone.utc)
+                db.commit()
+            except Exception as commit_err:
+                logger.error(f"Failed to record failure status in database: {commit_err}")
+                db.rollback()
             return False

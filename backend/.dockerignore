@@ -1,0 +1,31 @@
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+tests/.pytest_cache/
+
+# Local database and storage
+*.db
+*.sqlite3
+storage/uploads/*
+!storage/uploads/.gitkeep
+
+# Git & IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+*.swp

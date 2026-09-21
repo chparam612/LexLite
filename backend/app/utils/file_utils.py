@@ -80,12 +80,10 @@ def validate_pdf_file(data: bytes, original_filename: str, max_size_mb: int = 25
 
     # 5. Structural validation with PyMuPDF
     try:
-        doc = fitz.open(stream=data, filetype="pdf")
-        page_count = len(doc)
-        if page_count == 0:
-            doc.close()
-            raise FileValidationError("PDF document contains zero pages.")
-        doc.close()
+        with fitz.open(stream=data, filetype="pdf") as doc:
+            page_count = len(doc)
+            if page_count == 0:
+                raise FileValidationError("PDF document contains zero pages.")
     except Exception as e:
         if isinstance(e, FileValidationError):
             raise

@@ -62,7 +62,7 @@ class RetrievalService:
         if not query or not query.strip():
             return []
 
-        query_vector = self.embedding_service.embed_text(query.strip())
+        query_vector = self.embedding_service.embed_query(query.strip())
 
         # Base query joining Embedding -> DocumentChunk -> DocumentVersion -> Document
         base_query = (

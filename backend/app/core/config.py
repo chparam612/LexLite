@@ -1,5 +1,5 @@
-from typing import List, Union, Any
-from pydantic import field_validator
+from typing import List, Union, Any, Optional
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
 
@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_DIR: str = "./storage/uploads"
     GOOGLE_CLOUD_PROJECT: str = "legal-ai-project"
     GOOGLE_CLOUD_STORAGE_BUCKET: str = "legal-ai-documents"
+    GCS_BUCKET_NAME: Optional[str] = None
 
     # AI & Gemini
     GEMINI_API_KEY: str = "demo-key-for-dev"
@@ -81,6 +82,14 @@ class Settings(BaseSettings):
         if v <= 0:
             raise ValueError("MAX_UPLOAD_SIZE_MB must be greater than 0")
         return v
+
+    @model_validator(mode="after")
+    def sync_storage_bucket(self) -> "Settings":
+        if self.GCS_BUCKET_NAME and not self.GOOGLE_CLOUD_STORAGE_BUCKET:
+            self.GOOGLE_CLOUD_STORAGE_BUCKET = self.GCS_BUCKET_NAME
+        elif self.GCS_BUCKET_NAME and self.GOOGLE_CLOUD_STORAGE_BUCKET == "legal-ai-documents":
+            self.GOOGLE_CLOUD_STORAGE_BUCKET = self.GCS_BUCKET_NAME
+        return self
 
 
 settings = Settings()

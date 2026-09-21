@@ -163,7 +163,15 @@ class GenerationService:
                 generation_config={"response_mime_type": "application/json"}
             )
             response = model.generate_content(user_prompt)
-            data = json.loads(response.text)
+            raw_text = response.text.strip()
+            if raw_text.startswith("```"):
+                lines = raw_text.splitlines()
+                if lines and lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                raw_text = "\n".join(lines).strip()
+            data = json.loads(raw_text)
             return GroundedResponse(**data)
         except Exception as e:
             logger.error(f"Gemini generation call failed, falling back to local grounding: {e}")

@@ -48,7 +48,7 @@ class EmbeddingService:
             return [x / magnitude for x in raw_vec]
         return raw_vec
 
-    def embed_text(self, text: str, retries: int = 3) -> List[float]:
+    def embed_text(self, text: str, retries: int = 3, task_type: str = "retrieval_document") -> List[float]:
         """
         Generate embedding vector for a single text string.
         Rejects empty text and handles rate limits with exponential backoff.
@@ -73,7 +73,7 @@ class EmbeddingService:
                 response = genai.embed_content(
                     model=self.model_name,
                     content=clean_text,
-                    task_type="retrieval_document"
+                    task_type=task_type
                 )
                 embedding = response.get("embedding", [])
                 if len(embedding) != self.dimensions:
@@ -104,6 +104,10 @@ class EmbeddingService:
                     time.sleep(1)
 
         return self._generate_synthetic_embedding(clean_text)
+
+    def embed_query(self, query: str, retries: int = 3) -> List[float]:
+        """Generate embedding vector for a search query using retrieval_query task type."""
+        return self.embed_text(query, retries=retries, task_type="retrieval_query")
 
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a collection of texts."""

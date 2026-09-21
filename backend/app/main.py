@@ -73,11 +73,11 @@ app.add_exception_handler(LegalAIException, legal_ai_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include Routers
-# Root health & ready endpoints (for GCP Cloud Run / Kubernetes probes)
-app.include_router(health_router, prefix="", tags=["System Probes"])
+# Root health & ready endpoints (for GCP Cloud Run / Kubernetes probes, omitted from public OpenAPI spec)
+app.include_router(health_router, prefix="", include_in_schema=False)
 
 # Versioned API v1 routers
-app.include_router(health_router, prefix="/api/v1", tags=["System Probes v1"])
+app.include_router(health_router, prefix="/api/v1", tags=["System Probes"])
 app.include_router(auth_router, prefix="/api/v1", tags=["Authentication v1"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents v1"])
 app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["Conversations v1"])
