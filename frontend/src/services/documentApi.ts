@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, API_BASE_URL } from './api';
 
 export interface DocumentItem {
   id: string;
@@ -72,7 +72,6 @@ export const retryDocumentProcessing = async (documentId: string): Promise<Docum
 };
 
 export const getDocumentDownloadUrl = (documentId: string): string => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-  return `${baseUrl}/api/v1/documents/${documentId}/download`;
+  return `${API_BASE_URL}/api/v1/documents/${documentId}/download`;
 };
 
