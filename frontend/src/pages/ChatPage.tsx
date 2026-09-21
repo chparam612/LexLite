@@ -24,6 +24,7 @@ import {
   deleteConversation,
   sendMessage
 } from '../services/api';
+import { AiProcessingDetails } from '../components/chat/AiProcessingDetails';
 
 export const ChatPage: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -328,6 +329,10 @@ export const ChatPage: React.FC = () => {
                         ))}
                       </div>
                     </div>
+                  )}
+
+                  {!isUser && msg.processing_details && (
+                    <AiProcessingDetails details={msg.processing_details} />
                   )}
                 </div>
 

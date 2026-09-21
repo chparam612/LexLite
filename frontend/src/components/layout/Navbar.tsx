@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, Activity, LogOut, User as UserIcon } from 'lucide-react';
+import { Scale, Activity, LogOut, User as UserIcon, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -44,6 +44,16 @@ export const Navbar: React.FC<NavbarProps> = ({ backendStatus = 'healthy' }) => 
             <Link to="/chat" className="hover:text-slate-900 transition-colors">
               Chat
             </Link>
+            <Link
+              to="/demo"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              Demo Hub
+            </Link>
+            <Link to="/evaluation" className="hover:text-slate-900 transition-colors">
+              Evaluation
+            </Link>
             <Link to="/settings" className="hover:text-slate-900 transition-colors">
               Settings
             </Link>
@@ -72,6 +82,12 @@ export const Navbar: React.FC<NavbarProps> = ({ backendStatus = 'healthy' }) => 
             </div>
           ) : (
             <div className="flex items-center gap-3">
+              <Link
+                to="/evaluation"
+                className="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Evaluation Suite
+              </Link>
               <Link
                 to="/login"
                 className="text-sm font-medium text-slate-700 hover:text-slate-900 px-3 py-2 rounded-md hover:bg-slate-50 transition-colors"

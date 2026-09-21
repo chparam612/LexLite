@@ -15,6 +15,10 @@ from app.api.v1.health import router as health_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.conversations import router as conversations_router
+from app.api.v1.demo import router as demo_router
+from app.api.v1.evaluation import router as evaluation_router
+from app.api.v1.system import router as system_router
+from app.api.v1.chat import router as chat_router
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
@@ -81,3 +85,7 @@ app.include_router(health_router, prefix="/api/v1", tags=["System Probes"])
 app.include_router(auth_router, prefix="/api/v1", tags=["Authentication v1"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents v1"])
 app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["Conversations v1"])
+app.include_router(demo_router, prefix="/api/v1", tags=["Demo & Judging v1"])
+app.include_router(evaluation_router, prefix="/api/v1", tags=["Evaluation Dashboard v1"])
+app.include_router(system_router, prefix="/api/v1", tags=["System Diagnostics v1"])
+app.include_router(chat_router, prefix="/api/v1")

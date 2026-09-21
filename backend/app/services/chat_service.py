@@ -16,7 +16,8 @@ from app.schemas.conversation import (
     ConversationDetailResponse,
     MessageResponse,
     CitationResponse,
-    ClaimResponse
+    ClaimResponse,
+    ProcessingDetails
 )
 
 
@@ -322,6 +323,26 @@ class ChatService:
             for cl in assistant_msg.claims
         ]
 
+        # Calculate verification summary status
+        if not grounded_resp.claims:
+            verification_status = "insufficient_evidence"
+        elif grounding_score >= 0.7:
+            verification_status = "supported"
+        elif grounding_score >= 0.4:
+            verification_status = "partially_supported"
+        else:
+            verification_status = "unverified"
+
+        proc_details = ProcessingDetails(
+            retrieval_method="hybrid (dense + keyword fused)",
+            candidate_chunks=len(hits),
+            context_chunks=len(hits),
+            reranking_used=True,
+            verification_performed=True,
+            verification_status=verification_status,
+            latency_ms=latency_ms
+        )
+
         return MessageResponse(
             id=assistant_msg.id,
             conversation_id=conv.id,
@@ -330,5 +351,39 @@ class ChatService:
             model_name=assistant_msg.model_name,
             citations=citation_responses,
             claims=claim_responses,
+            processing_details=proc_details,
             created_at=assistant_msg.created_at
         )
+
+    def get_message_citations(self, db: Session, user: User, message_id: str) -> List[CitationResponse]:
+        """Fetch evidentiary citations for a specific message ensuring tenant authorization."""
+        message = (
+            db.query(Message)
+            .join(Conversation, Conversation.id == Message.conversation_id)
+            .filter(Message.id == message_id, Conversation.user_id == user.id)
+            .first()
+        )
+        if not message:
+            raise LegalAIException(
+                message="Message not found or unauthorized.",
+                code="MESSAGE_NOT_FOUND",
+                status_code=404
+            )
+        citations = db.query(Citation).filter(Citation.message_id == message_id).order_by(Citation.citation_order).all()
+        citation_responses = []
+        for cit in citations:
+            doc_title = None
+            if cit.chunk and cit.chunk.version and cit.chunk.version.document:
+                doc_title = cit.chunk.version.document.title
+            citation_responses.append(
+                CitationResponse(
+                    id=cit.id,
+                    chunk_id=cit.chunk_id,
+                    page_number=cit.page_number,
+                    section_label=cit.section_label,
+                    quoted_text=cit.quoted_text,
+                    citation_order=cit.citation_order,
+                    document_title=doc_title
+                )
+            )
+        return citation_responses

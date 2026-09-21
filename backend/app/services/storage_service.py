@@ -104,7 +104,17 @@ class GCSStorageService(StorageService):
         return self.fallback.delete_file(key)
 
 
+# Section 27D Aliases
+StorageProvider = StorageService
+LocalStorageProvider = LocalFileStorageService
+GoogleCloudStorageProvider = GCSStorageService
+
+
 def get_storage_service() -> StorageService:
     if settings.STORAGE_BACKEND.lower() == "gcs" and settings.GOOGLE_CLOUD_STORAGE_BUCKET:
         return GCSStorageService(settings.GOOGLE_CLOUD_STORAGE_BUCKET)
     return LocalFileStorageService(settings.LOCAL_STORAGE_DIR)
+
+
+def get_storage_provider() -> StorageProvider:
+    return get_storage_service()

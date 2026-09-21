@@ -12,6 +12,8 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { DocumentLibraryPage } from '../pages/DocumentLibraryPage';
 import { ChatPage } from '../pages/ChatPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { DemoPage } from '../pages/DemoPage';
+import { EvaluationDashboardPage } from '../pages/EvaluationDashboardPage';
 import { checkHealth } from '../services/api';
 
 const queryClient = new QueryClient({
@@ -63,6 +65,7 @@ export const App: React.FC = () => {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/evaluation" element={<EvaluationDashboardPage />} />
 
                 {/* Protected routes */}
                 <Route
@@ -70,6 +73,14 @@ export const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/demo"
+                  element={
+                    <ProtectedRoute>
+                      <DemoPage />
                     </ProtectedRoute>
                   }
                 />

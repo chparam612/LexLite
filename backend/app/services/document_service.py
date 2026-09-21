@@ -111,6 +111,14 @@ class DocumentService:
         return doc
 
     @staticmethod
+    def get_document_file_bytes(db: Session, document_id: str, owner_id: str):
+        """Fetch raw document bytes and title ensuring tenant authorization."""
+        doc = DocumentService.get_document(db, document_id, owner_id)
+        storage = get_storage_service()
+        file_bytes = storage.get_file(doc.storage_key)
+        return file_bytes, doc.title
+
+    @staticmethod
     def delete_document(db: Session, document_id: str, owner_id: str) -> bool:
         """Enforce ownership, purge physical storage, and cascade delete document entities."""
         doc = DocumentService.get_document(db, document_id, owner_id)

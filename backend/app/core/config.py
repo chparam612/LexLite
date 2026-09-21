@@ -30,15 +30,25 @@ class Settings(BaseSettings):
 
     # Storage
     STORAGE_BACKEND: str = "local"
+    STORAGE_MODE: str = "local"
     LOCAL_STORAGE_DIR: str = "./storage/uploads"
     GOOGLE_CLOUD_PROJECT: str = "legal-ai-project"
     GOOGLE_CLOUD_STORAGE_BUCKET: str = "legal-ai-documents"
     GCS_BUCKET_NAME: Optional[str] = None
 
-    # AI & Gemini
+    # AI & Gemini (Section 27 Free-First)
+    AI_PROVIDER: str = "gemini"  # "gemini", "local_llm", "mock"
     GEMINI_API_KEY: str = "demo-key-for-dev"
+    GEMINI_MODEL: str = "gemini-flash-latest"
+    GEMINI_GENERATION_MODEL: str = "models/gemini-flash-latest"
     GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
-    GEMINI_GENERATION_MODEL: str = "models/gemini-1.5-flash"
+    EMBEDDING_PROVIDER: str = "local"  # "local", "gemini", "mock"
+    LOCAL_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    VECTOR_STORE: str = "faiss"  # "faiss", "pgvector"
+    DATABASE_MODE: str = "sqlite"  # "sqlite", "postgres"
+    ALLOW_PAID_AI_FALLBACK: bool = False  # NEVER enable paid fallback automatically
+    MAX_OUTPUT_TOKENS: int = 2048
+    MAX_CONTEXT_TOKENS: int = 8000
     RERANKER_MODEL: str = "models/text-embedding-004"
 
     # RAG Config
@@ -48,7 +58,6 @@ class Settings(BaseSettings):
     FUSION_TOP_K: int = 40
     RERANK_TOP_K: int = 10
     FINAL_CONTEXT_CHUNKS: int = 8
-    MAX_CONTEXT_TOKENS: int = 12000
     PARENT_CONTEXT_ENABLED: bool = True
     CITATION_VERIFICATION_ENABLED: bool = True
 

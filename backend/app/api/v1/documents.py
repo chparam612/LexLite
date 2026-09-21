@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status, BackgroundTasks
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, BackgroundTasks, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user
@@ -117,3 +117,21 @@ def retry_document_processing(
             doc.versions[-1].id
         )
     return doc
+
+
+@router.get("/{document_id}/download", status_code=status.HTTP_200_OK)
+def download_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download or preview the raw document PDF file (Phase 3 & 9 capability).
+    """
+    file_bytes, title = DocumentService.get_document_file_bytes(db, document_id, current_user.id)
+    safe_title = "".join(c for c in title if c.isalnum() or c in (" ", "_", "-")).rstrip() or "document"
+    return Response(
+        content=file_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'}
+    )

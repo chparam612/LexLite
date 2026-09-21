@@ -31,6 +31,12 @@ def normalize_text(text: str) -> str:
 
 
 class VerificationService:
+    @classmethod
+    def verify_exact_quote(cls, quote: str, chunk_content: str) -> bool:
+        """Helper checking if quote is verified in chunk content."""
+        found, _ = cls.verify_quote_in_chunk(quote, chunk_content)
+        return found
+
     @staticmethod
     def verify_quote_in_chunk(quote: str, chunk_content: str) -> Tuple[bool, float]:
         """

@@ -10,16 +10,19 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle, 
-  Loader2 
+  Loader2,
+  Eye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchDocuments, deleteDocument, retryDocumentProcessing, DocumentItem } from '../services/documentApi';
 import { UploadModal } from '../components/documents/UploadModal';
+import { DocumentPreviewModal } from '../components/documents/DocumentPreviewModal';
 
 export const DocumentLibraryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
@@ -186,6 +189,13 @@ export const DocumentLibraryPage: React.FC = () => {
                 </Link>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPreviewDoc(doc)}
+                    className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+                    title="View details and download PDF"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
                   {doc.status === 'failed' && (
                     <button
                       onClick={() => retryMutation.mutate(doc.id)}
@@ -214,6 +224,13 @@ export const DocumentLibraryPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Preview Modal */}
+      <DocumentPreviewModal
+        document={previewDoc}
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+      />
 
       {/* Upload Modal */}
       <UploadModal

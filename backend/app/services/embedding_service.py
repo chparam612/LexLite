@@ -10,17 +10,29 @@ from app.core.exceptions import LegalAIException
 from app.models.chunk import DocumentChunk
 from app.models.embedding import Embedding, EmbeddingModel
 
+from app.services.embedding_provider import (
+    EmbeddingProvider,
+    get_embedding_provider,
+)
+
 DEFAULT_DIMENSIONS = 768
 
 
 class EmbeddingService:
-    def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        provider: Optional[EmbeddingProvider] = None
+    ):
         self.api_key = api_key or settings.GEMINI_API_KEY
         self.model_name = model_name or settings.GEMINI_EMBEDDING_MODEL
         self.dimensions = DEFAULT_DIMENSIONS
+        self.provider = provider or get_embedding_provider()
 
         self.client_initialized = False
-        if self.api_key and self.api_key not in ("demo-key-for-dev", "your-gemini-api-key-here", ""):
+        valid_key = self.api_key and self.api_key not in ("demo-key-for-dev", "your-gemini-api-key-here", "")
+        if settings.EMBEDDING_PROVIDER == "gemini" and valid_key:
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=self.api_key)

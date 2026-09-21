@@ -24,6 +24,18 @@ class ClaimResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProcessingDetails(BaseModel):
+    retrieval_method: str = "hybrid"
+    candidate_chunks: int = 0
+    context_chunks: int = 0
+    reranking_used: bool = True
+    verification_performed: bool = True
+    verification_status: str = "supported"
+    latency_ms: Optional[float] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class MessageCreate(BaseModel):
     content: str
 
@@ -36,6 +48,7 @@ class MessageResponse(BaseModel):
     model_name: Optional[str] = None
     citations: List[CitationResponse] = []
     claims: List[ClaimResponse] = []
+    processing_details: Optional[ProcessingDetails] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

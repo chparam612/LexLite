@@ -70,3 +70,9 @@ export const retryDocumentProcessing = async (documentId: string): Promise<Docum
   const res = await apiClient.post<DocumentItem>(`/api/v1/documents/${documentId}/retry`);
   return res.data;
 };
+
+export const getDocumentDownloadUrl = (documentId: string): string => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  return `${baseUrl}/api/v1/documents/${documentId}/download`;
+};
+

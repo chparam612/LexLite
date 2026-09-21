@@ -74,6 +74,17 @@ export interface Claim {
   support_status: string;
 }
 
+export interface ProcessingDetails {
+  candidate_chunks_retrieved: number;
+  context_chunks_used: number;
+  verification_status: string;
+  retrieval_method: string;
+  retrieval_latency_ms: number;
+  generation_latency_ms: number;
+  total_latency_ms: number;
+  model_name?: string;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -82,6 +93,7 @@ export interface Message {
   model_name?: string;
   citations: Citation[];
   claims: Claim[];
+  processing_details?: ProcessingDetails;
   created_at: string;
 }
 
@@ -132,4 +144,60 @@ export const sendMessage = async (
   );
   return response.data;
 };
+
+// ---------------------------------------------------------------------
+// Demo & Synthetic Document API
+// ---------------------------------------------------------------------
+
+export interface LoadSampleDocumentResponse {
+  status: string;
+  message: string;
+  document: {
+    id: string;
+    title: string;
+    filename: string;
+    file_size_bytes: number;
+    status: string;
+    page_count: number;
+  };
+}
+
+export const loadSampleDocument = async (): Promise<LoadSampleDocumentResponse> => {
+  const response = await apiClient.post<LoadSampleDocumentResponse>('/api/v1/demo/load-sample');
+  return response.data;
+};
+
+export const getSampleDocumentPdfUrl = (): string => {
+  return `${API_BASE_URL}/api/v1/demo/sample-document`;
+};
+
+// ---------------------------------------------------------------------
+// Evaluation Suite API
+// ---------------------------------------------------------------------
+
+export interface TestCaseResult {
+  test_id: string;
+  category: string;
+  name: string;
+  input_description: string;
+  expected_behavior: string;
+  actual_result: string;
+  status: string;
+  duration_ms: number;
+}
+
+export interface EvaluationSummary {
+  total_tests: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  execution_time_ms: number;
+  results: TestCaseResult[];
+}
+
+export const runEvaluation = async (): Promise<EvaluationSummary> => {
+  const response = await apiClient.post<EvaluationSummary>('/api/v1/evaluation/run');
+  return response.data;
+};
+
 
