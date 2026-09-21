@@ -192,60 +192,65 @@ class GeminiProvider(AIProvider):
             f'"uncertainty": null, "professional_review_recommended": true}}'
         )
 
-        retries = 3
-        for attempt in range(retries):
-            try:
-                model = genai.GenerativeModel(
-                    model_name=self.model_name,
-                    system_instruction=LEGAL_SYSTEM_PROMPT,
-                    generation_config={
-                        "response_mime_type": "application/json",
-                        "max_output_tokens": settings.MAX_OUTPUT_TOKENS,
-                        "temperature": 0.1,
-                    }
-                )
-                response = model.generate_content(user_prompt)
-                raw_text = response.text.strip()
-                if raw_text.startswith("```"):
-                    lines = raw_text.splitlines()
-                    if lines and lines[0].startswith("```"):
-                        lines = lines[1:]
-                    if lines and lines[-1].startswith("```"):
-                        lines = lines[:-1]
-                    raw_text = "\n".join(lines).strip()
+        candidate_models = [self.model_name]
+        for fallback_model in ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]:
+            if fallback_model not in candidate_models:
+                candidate_models.append(fallback_model)
 
-                data = json.loads(raw_text)
-                return GroundedResponse(**data)
-
-            except Exception as e:
-                err_str = str(e)
-                safe_err = err_str.replace(self.api_key, "[REDACTED]") if self.api_key else err_str
-
-                # Handle quota exhaustion
-                if "429" in safe_err or "quota" in safe_err.lower() or "resource" in safe_err.lower():
-                    if settings.ALLOW_PAID_AI_FALLBACK:
-                        logger.warning("Quota reached, but ALLOW_PAID_AI_FALLBACK is False. Will not call paid model.")
-                    logger.error(f"Gemini API quota exhausted: {safe_err}")
-                    raise LegalAIException(
-                        message=(
-                            "AI usage limit reached. Please wait for the quota to reset "
-                            "or configure another permitted model."
-                        ),
-                        code="QUOTA_EXHAUSTED",
-                        status_code=429
+        last_error = None
+        for model_to_use in candidate_models:
+            for attempt in range(2):
+                try:
+                    model = genai.GenerativeModel(
+                        model_name=model_to_use,
+                        system_instruction=LEGAL_SYSTEM_PROMPT,
+                        generation_config={
+                            "response_mime_type": "application/json",
+                            "max_output_tokens": settings.MAX_OUTPUT_TOKENS,
+                            "temperature": 0.1,
+                        }
                     )
+                    response = model.generate_content(user_prompt)
+                    raw_text = response.text.strip()
+                    if raw_text.startswith("```"):
+                        lines = raw_text.splitlines()
+                        if lines and lines[0].startswith("```"):
+                            lines = lines[1:]
+                        if lines and lines[-1].startswith("```"):
+                            lines = lines[:-1]
+                        raw_text = "\n".join(lines).strip()
 
-                if attempt < retries - 1:
-                    wait_time = 2 ** attempt
-                    logger.warning(f"Gemini call failed ({safe_err}). Retrying in {wait_time}s...")
-                    time.sleep(wait_time)
-                else:
-                    logger.error(f"Gemini generation call failed after {retries} attempts: {safe_err}")
-                    raise LegalAIException(
-                        message="AI service temporarily unavailable. Please verify your connection and try again.",
-                        code="AI_GENERATION_FAILED",
-                        status_code=503
-                    )
+                    data = json.loads(raw_text)
+                    return GroundedResponse(**data)
+
+                except Exception as e:
+                    last_error = e
+                    err_str = str(e)
+                    safe_err = err_str.replace(self.api_key, "[REDACTED]") if self.api_key else err_str
+
+                    # If model not found (404), break immediately to try next candidate model
+                    if "404" in safe_err or "not found" in safe_err.lower():
+                        logger.warning(f"Model {model_to_use} not found on this API key. Trying next candidate...")
+                        break
+
+                    # If quota exhausted (429), raise LegalAIException
+                    if "429" in safe_err or "quota" in safe_err.lower() or "resource" in safe_err.lower():
+                        logger.error(f"Gemini API quota exhausted: {safe_err}")
+                        raise LegalAIException(
+                            message="AI usage limit reached. Please wait for the quota to reset or configure another permitted model.",
+                            code="QUOTA_EXHAUSTED",
+                            status_code=429
+                        )
+
+                    logger.warning(f"Gemini call to {model_to_use} failed ({safe_err}). Retrying...")
+                    time.sleep(0.5)
+
+        logger.error(f"Gemini generation call failed: {last_error}")
+        raise LegalAIException(
+            message="AI service temporarily unavailable. Please verify your connection and try again.",
+            code="AI_GENERATION_FAILED",
+            status_code=503
+        )
 
     def classify_query(self, query: str) -> str:
         q_lower = query.lower()
