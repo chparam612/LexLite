@@ -1,37 +1,20 @@
-# Unresolved Issues & External Dependencies Log
-
-**Date**: September 21, 2026  
-**Project**: Legal AI Assistant (LexLite)
-
----
-
-## Current Status Overview
-
-All application-level software defects, authentication failures, database schema incompatibilities, and frontend build issues have been **100% resolved and verified** in code.
-
-The items below document external dependencies that require user credential ownership or manual external dashboard actions.
-
----
+# Unresolved Issues & Environmental Constraints
 
 ## 1. External Infrastructure Dependencies
 
-### DEP-001: Google Cloud Run Billing Account Activation
-- **Status**: **BLOCKED (Requires User Action)**
-- **Description**: Deployment to Google Cloud Run requires an active Google Cloud Billing Account linked to the GCP project.
-- **Impact**: Automatic deployment to Cloud Run via CLI or Cloud Build cannot proceed without active billing.
-- **Mitigation**: The application is already containerized and successfully deployed to **Render** (`https://legal-ai-backend.onrender.com`) for the backend and **Vercel** (`https://lex-lite.vercel.app`) for the frontend. If Google Cloud Run is specifically needed, the user must attach a valid billing account in Google Cloud Console.
+### A. Render Free Tier Spin-Down (Cold Starts)
+- **Status**: External platform constraint (Render Free Web Service).
+- **Behavior**: Services on the free plan spin down after 15 minutes of zero traffic. The initial request can take 30 to 50 seconds to complete while the container boots, loads PyTorch, and connects to the database.
+- **Mitigation Implemented**: Frontend displays a friendly warming-up banner informing the user when a cold start is detected rather than timing out abruptly.
+- **Recommended User Action**: Consider upgrading Render instance to a Starter ($7/mo) plan to eliminate cold starts for production demos.
 
-### DEP-002: Remote Repository Synchronization (Git Push)
-- **Status**: **PENDING USER ACTION**
-- **Description**: The verified code fixes reside on the local branch `main`.
-- **Impact**: Render and Vercel build pipelines are triggered on git pushes to `chparam612/LexLite`.
-- **Required Action**: Run `git push origin main` in the terminal to trigger automatic production redeployments.
+### B. Third-Party Provider API Keys
+- **Status**: Requires user credentials.
+- **Behavior**:
+  - `GROQ_API_KEY`: Required if setting `AI_PROVIDER=groq`.
+  - `GEMINI_API_KEY`: Required if setting `AI_PROVIDER=gemini`.
+- **Mitigation Implemented**: If neither key is provided, the platform automatically degrades to the built-in local deterministic synthesis engine with full citation and quote extraction ($0 cost, 0 external dependencies).
 
----
-
-## 2. No Codebase Blockers Remaining
-
-- **Backend Unit Tests**: Passing.
-- **Frontend TypeScript / Vite Build**: Passing (0 errors).
-- **Authentication System**: Fully self-contained with zero external third-party auth dependencies required.
-- **AI / Grounding Pipeline**: Operates with Google Gemini and seamlessly degrades to local grounded clause extraction if Gemini Free Tier limits are exhausted.
+### C. Vercel Redeployment with Environment Variable
+- **Status**: Requires user action in Vercel UI.
+- **Behavior**: If `VITE_API_BASE_URL` was modified or previously missing on Vercel, a new deployment must be triggered for Vite to compile the variable into client JS.

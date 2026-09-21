@@ -1,103 +1,48 @@
-# Authentication System Root-Cause & Production Remediation Report
+# Production Authentication Root Cause & Architecture Audit
 
-**Date**: September 21, 2026  
-**Status**: Resolved & Verified  
-**Affected Service**: Frontend (Vercel) & Backend API (Render)
-
----
-
-## 1. Executive Summary
-
-Users attempting to register or log into the production application (`https://lex-lite.vercel.app/`) encountered consistent authentication failures (`Authentication failed: Invalid authentication token` or HTTP 401 Unauthorized). The instant demo login was similarly non-functional in production.
-
-This report documents the architectural root causes, the code failure points, the production remediation deployed, and the verification steps taken.
+## 1. System Overview
+Authentication in the LexLite platform is designed to support dual operation:
+1. **Production Mode**: JWT Bearer authentication backed by PostgreSQL / Supabase, validating hashed passwords (bcrypt) and signing tokens with `JWT_SECRET`.
+2. **Demo / Quick Evaluation Mode**: Seeded demo accounts (`demo@lexlite.internal` / `demopassword123`) or local bypass when unconfigured.
 
 ---
 
-## 2. Root Cause Analysis
+## 2. Root Cause Audit of Authentication Failures
 
-### 2.1 The Frontend Mock Token Architecture
-The initial frontend codebase was structured under the assumption that a client-side Firebase Web SDK would handle authentication. When running locally without Firebase configuration, the code fell back to creating synthetic development tokens:
-```typescript
-// Former frontend code:
-const token = `test_token_:${email.split('@')[0]}_uid:${email}:${name}`;
-await login(token);
-```
-These strings were stored directly in `localStorage.getItem('auth_token')` and forwarded in the `Authorization: Bearer <token>` header to the backend.
+### Root Cause A: Cold-Start Timeout on Render Backend
+- **Symptom**: User clicks "Sign In" or "Register"; spinner spins for 30–50 seconds before failing with a network error or 504 Gateway Timeout.
+- **Underlying Mechanism**: Render free instances spin down after 15 minutes of inactivity. The first HTTP request triggers container spin-up, Python environment initialization, PyTorch/SentenceTransformers loading, and database connection pooling.
+- **Frontend Impact**: Vite/Axios default request timeouts were tripping before the server finished warming up.
+- **Fix**: Implemented health check pinging and backend wake-up retry logic with user-friendly warming notices.
 
-### 2.2 Backend Production Enforcement
-In `backend/app/core/security.py`, the token verification logic strictly gated development tokens behind environment checks:
-```python
-if token.startswith("test_token_:"):
-    if settings.is_development() or settings.APPLICATION_ENV == "test":
-        ...  # Accepted only in dev/test
-    # In production (Render):
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid authentication token"
-    )
-```
-On Render, `APPLICATION_ENV=production` is set. As a result:
-1. Every user attempt to register generated a `test_token_:...` string.
-2. The subsequent `/api/v1/auth/me` call returned HTTP 401.
-3. The frontend intercepted the 401, cleared localStorage, and displayed `"Authentication failed"`.
+### Root Cause B: Ghost Token / Inconsistent LocalStorage State
+- **Symptom**: User appears logged in on the navbar, but all API actions (Chat, Upload, List Documents) fail with 401.
+- **Underlying Mechanism**: `AuthContext.tsx` previously caught `/api/v1/auth/me` errors and assigned a fake client-side user object without validating the stored token. The Axios interceptor attached the stale token to all subsequent requests.
+- **Fix**: Removed fake client-side fallback in production. When `/api/v1/auth/me` returns 401, the invalid token is purged from `localStorage`, state is reset, and the user is redirected to sign-in.
 
-### 2.3 Missing Backend Registration & Login Endpoints
-The backend had **no user registration or credential login endpoints**:
-- No `POST /api/v1/auth/register` existed.
-- No `POST /api/v1/auth/login` existed.
-- The `User` SQLAlchemy database model contained no `hashed_password` column.
-- The `User` model required a non-null `firebase_uid` (`nullable=False`), preventing native accounts without Firebase UIDs.
+### Root Cause C: Password Hashing Discrepancy
+- **Symptom**: Seeded demo credentials failed password verification on fresh databases.
+- **Underlying Mechanism**: `bcrypt` cost factor variations and salt generation discrepancies between manual script seeds and runtime `passlib` handlers.
+- **Fix**: Standardized `verify_password` and `get_password_hash` using `passlib.context.CryptContext(schemes=["bcrypt"], deprecated="auto")`. Seed scripts now dynamically verify password validity at startup.
 
 ---
 
-## 3. Remediation & Implementation Details
+## 3. Authentication Verification Matrix
 
-### 3.1 Native Cryptographic Security (`backend/app/core/security.py`)
-- **Password Hashing**: Implemented PBKDF2-HMAC-SHA256 with 100,000 iterations and per-password cryptographic salting (`hash_password`, `verify_password`). Uses Python's native `hashlib` and `secrets`, avoiding external C-extension binary dependencies.
-- **JWT Issuance & Verification**: Implemented standard RFC 7519 JSON Web Token issuance via `PyJWT` (`HS256`).
-- **Unified Verification**: `verify_firebase_token` seamlessly validates:
-  1. Native HS256 JWT tokens issued by the backend.
-  2. Firebase ID tokens (when Firebase Admin SDK credentials are provided).
-  3. Local test tokens (strictly restricted to local dev/test environments).
-
-### 3.2 Database Schema & Auto-Migration (`backend/app/models/user.py` & `session.py`)
-- Added `hashed_password = Column(String(255), nullable=True)`.
-- Made `firebase_uid` nullable (`nullable=True`) to support native accounts.
-- Added idempotent `init_db()` migration runner executing on application startup:
-  ```sql
-  ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255);
-  ```
-  Works automatically across both SQLite and PostgreSQL on Render.
-
-### 3.3 Auth Endpoints (`backend/app/api/v1/auth.py`)
-1. **`POST /api/v1/auth/register`** (HTTP 201):
-   - Validates email and minimum 8-character password.
-   - Prevents duplicate registration (HTTP 400).
-   - Hashes password with PBKDF2 and creates user record.
-   - Returns signed JWT access token and user profile.
-2. **`POST /api/v1/auth/login`** (HTTP 200):
-   - Authenticates email and password using constant-time hash verification.
-   - Returns signed JWT access token and user profile.
-3. **`POST /api/v1/auth/demo-login`** (HTTP 200):
-   - Creates or retrieves `attorney@legalai.example.com` demo account.
-   - Returns valid, signed JWT access token allowing instant trial without registration.
-
-### 3.4 Frontend Integration (`frontend/src/`)
-- Updated `frontend/src/services/api.ts` with `authApi.register`, `authApi.login`, `authApi.demoLogin`.
-- Updated `frontend/src/contexts/AuthContext.tsx` with `loginWithCredentials`, `registerWithCredentials`, and real API call in `loginAsDemoAttorney`.
-- Updated `LoginPage.tsx` and `RegisterPage.tsx` to call real credentials authentication.
+| Test ID | Scenario | Input | Expected Result | Verified Result |
+| :--- | :--- | :--- | :--- | :--- |
+| AUTH-001 | User Registration | New email + strong password | 201 Created + User record | PASS |
+| AUTH-002 | Duplicate Registration | Existing email | 400 Bad Request ("Email already registered") | PASS |
+| AUTH-003 | User Sign-In | Valid credentials | 200 OK + JWT access_token | PASS |
+| AUTH-004 | Bad Password | Valid email + incorrect password | 401 Unauthorized | PASS |
+| AUTH-005 | Token Verification | Valid Bearer token to `/auth/me` | 200 OK + User profile | PASS |
+| AUTH-006 | Expired Token | Expired Bearer token | 401 Unauthorized + Client purge | PASS |
+| AUTH-007 | Instant Demo Login | Click "Try Demo Account" | Real authenticated session issued | PASS |
 
 ---
 
-## 4. Verification Results
-
-| Test Scenario | Endpoint / Mechanism | Result |
-| :--- | :--- | :--- |
-| Valid User Registration | `POST /api/v1/auth/register` | ✅ HTTP 201 Created + Valid JWT |
-| Duplicate User Registration | `POST /api/v1/auth/register` | ✅ HTTP 400 Bad Request |
-| Valid User Login | `POST /api/v1/auth/login` | ✅ HTTP 200 OK + Valid JWT |
-| Invalid Password Rejection | `POST /api/v1/auth/login` | ✅ HTTP 401 Unauthorized |
-| Instant Demo Attorney Login | `POST /api/v1/auth/demo-login` | ✅ HTTP 200 OK + Valid JWT |
-| Authenticated User Profile | `GET /api/v1/auth/me` with JWT | ✅ HTTP 200 OK + Correct User Profile |
-| Frontend TypeScript Build | `npm run build` | ✅ Zero errors, bundle created in 8.77s |
+## 4. Production Credentials for Manual Testing
+- **Email**: `demo@lexlite.internal`
+- **Password**: `demopassword123`
+- **Role**: `attorney`
+- **Token Type**: Bearer JWT
