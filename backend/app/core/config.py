@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     )
 
     APPLICATION_ENV: str = "development"
+    ENVIRONMENT: Optional[str] = None
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
 
@@ -100,6 +102,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def sync_storage_bucket(self) -> "Settings":
+        if self.ENVIRONMENT and self.APPLICATION_ENV == "development":
+            self.APPLICATION_ENV = self.ENVIRONMENT
         if self.GCS_BUCKET_NAME and not self.GOOGLE_CLOUD_STORAGE_BUCKET:
             self.GOOGLE_CLOUD_STORAGE_BUCKET = self.GCS_BUCKET_NAME
         elif self.GCS_BUCKET_NAME and self.GOOGLE_CLOUD_STORAGE_BUCKET == "legal-ai-documents":

@@ -120,7 +120,7 @@ def verify_firebase_token(token: str) -> TokenData:
 
     # Handle mock / test tokens for development and automated test suites
     if token.startswith("test_token_") or token.startswith("mock_token_"):
-        if settings.APPLICATION_ENV.lower() == "production" and _firebase_app_initialized:
+        if settings.APPLICATION_ENV.lower() == "production":
             logger.warning("Attempted use of test/mock token in production environment blocked.")
             raise UnauthorizedError("Test tokens are not permitted in production.")
         if "expired" in token:

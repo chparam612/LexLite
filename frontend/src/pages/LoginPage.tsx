@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Scale, Lock, Mail, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from '../services/firebase';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,7 +11,7 @@ export const LoginPage: React.FC = () => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { loginWithCredentials, loginAsDemoAttorney, error, clearError } = useAuth();
+  const { login, loginWithCredentials, loginAsDemoAttorney, error, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,7 +29,15 @@ export const LoginPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await loginWithCredentials(email, password);
+      if (isFirebaseConfigured() && auth) {
+        // Real Firebase Authentication flow
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
+        await login(idToken);
+      } else {
+        // Direct backend credentials flow
+        await loginWithCredentials(email, password);
+      }
       navigate(from, { replace: true });
     } catch (err: any) {
       setLocalError(err.message || 'Login failed. Please check your credentials.');

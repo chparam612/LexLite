@@ -89,6 +89,10 @@ app.add_exception_handler(Exception, generic_exception_handler)
 
 @app.on_event("startup")
 def on_startup():
+    logger.info(
+        f"LEGAL AI starting up | Environment: {settings.APPLICATION_ENV} | "
+        f"Storage: {settings.STORAGE_BACKEND} | AI Provider: {settings.AI_PROVIDER}"
+    )
     from app.db.session import init_db
     init_db()
 

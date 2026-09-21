@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Scale, Lock, Mail, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from '../services/firebase';
 
 export const RegisterPage: React.FC = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { registerWithCredentials, clearError } = useAuth();
+  const { login, registerWithCredentials, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +32,16 @@ export const RegisterPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await registerWithCredentials(email, password, name);
+      if (isFirebaseConfigured() && auth) {
+        // Real Firebase User Registration
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        const idToken = await userCredential.user.getIdToken();
+        await login(idToken);
+      } else {
+        // Direct backend registration
+        await registerWithCredentials(email, password, name);
+      }
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setLocalError(err.message || 'Registration failed. Please try again.');
