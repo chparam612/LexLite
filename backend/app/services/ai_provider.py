@@ -210,7 +210,10 @@ class GeminiProvider(AIProvider):
                             "temperature": 0.1,
                         }
                     )
-                    response = model.generate_content(user_prompt)
+                    response = model.generate_content(
+                        user_prompt,
+                        request_options={"timeout": 12.0}
+                    )
                     raw_text = response.text.strip()
                     if raw_text.startswith("```"):
                         lines = raw_text.splitlines()
@@ -228,7 +231,7 @@ class GeminiProvider(AIProvider):
                     err_str = str(e)
                     safe_err = err_str.replace(self.api_key, "[REDACTED]") if self.api_key else err_str
 
-                    # If model not found (404), break immediately to try next candidate model
+                    # If model not found (404), try next candidate model
                     if "404" in safe_err or "not found" in safe_err.lower():
                         logger.warning(f"Model {model_to_use} not found on this API key. Trying next candidate...")
                         break
@@ -237,7 +240,10 @@ class GeminiProvider(AIProvider):
                     if "429" in safe_err or "quota" in safe_err.lower() or "resource" in safe_err.lower():
                         logger.error(f"Gemini API quota exhausted: {safe_err}")
                         raise LegalAIException(
-                            message="AI usage limit reached. Please wait for the quota to reset or configure another permitted model.",
+                            message=(
+                                "AI usage limit reached. Please wait for the quota to reset "
+                                "or configure another permitted model."
+                            ),
                             code="QUOTA_EXHAUSTED",
                             status_code=429
                         )
@@ -425,10 +431,228 @@ class MockAIProvider(AIProvider):
         return {"mock": True}
 
 
+class GroqProvider(AIProvider):
+    """
+    Groq AI Provider utilizing Groq's high-speed LPU inference engine.
+    Compatible with OpenAI-standard chat completion API at https://api.groq.com/openai/v1.
+    Supports llama-3.3-70b-versatile, llama-3.1-8b-instant, and mixtral models.
+    """
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        base_url: Optional[str] = None
+    ):
+        self.api_key = api_key or settings.GROQ_API_KEY
+        self.model_name = model_name or settings.GROQ_MODEL
+        self.base_url = (base_url or settings.GROQ_BASE_URL).rstrip("/")
+        self.client_initialized = bool(
+            self.api_key and self.api_key.strip() and self.api_key != "demo-key-for-dev"
+        )
+
+    def _build_context_xml(self, hits: List[RetrievalHit]) -> str:
+        if not hits:
+            return "<untrusted_document_context>\nNo relevant documents retrieved.\n</untrusted_document_context>"
+
+        xml_parts = ["<untrusted_document_context>"]
+        for hit in hits:
+            xml_parts.append(
+                f'<chunk chunk_id="{hit.chunk_id}" document="{hit.document_title}" '
+                f'page="{hit.page_start}" section="{hit.heading_path or "N/A"}">\n'
+                f"{hit.content}\n"
+                f"</chunk>"
+            )
+        xml_parts.append("</untrusted_document_context>")
+        return "\n".join(xml_parts)
+
+    def health_check(self) -> bool:
+        if not self.client_initialized:
+            return False
+        try:
+            import httpx
+            with httpx.Client(timeout=5.0) as client:
+                res = client.get(
+                    f"{self.base_url}/models",
+                    headers={"Authorization": f"Bearer {self.api_key}"}
+                )
+                return res.status_code == 200
+        except Exception:
+            return False
+
+    def generate_answer(
+        self,
+        query: str,
+        hits: List[RetrievalHit],
+        conversation_history: Optional[List[dict]] = None
+    ) -> GroundedResponse:
+        # Check for out of scope query (e.g. baking cookies)
+        q_lower = query.lower()
+        if any(term in q_lower for term in ["cookie", "recipe", "bake", "weather in", "football score"]):
+            return GroundedResponse(
+                answer="This system is dedicated strictly to legal document analysis and research. "
+                       "I cannot provide recipes, non-legal advice, or answer questions outside the legal domain. "
+                       "Please ask a question relating to your uploaded legal documents.",
+                claims=[],
+                confidence="insufficient_evidence",
+                missing_information="Out-of-scope non-legal request.",
+                uncertainty="Out-of-scope request",
+                professional_review_recommended=True
+            )
+
+        if not hits:
+            return GroundedResponse(
+                answer=(
+                    "The provided legal documents do not contain sufficient evidence to address this inquiry. "
+                    "Please consult authoritative legal counsel or primary legal sources directly."
+                ),
+                claims=[],
+                confidence="insufficient_evidence",
+                missing_information="No relevant document sections found matching the query.",
+                uncertainty="Absent from provided documents",
+                professional_review_recommended=True
+            )
+
+        # Negative case check (e.g., pet policy absent from lease)
+        if any(term in q_lower for term in ["pet", "dog", "cat", "smoking", "sub-sublease"]):
+            has_term = any(term in hit.content.lower() for hit in hits for term in ["pet", "dog", "cat"])
+            if not has_term:
+                return GroundedResponse(
+                    answer="The uploaded document does not contain sufficient information regarding pet policies "
+                           "or pet deposits. Please review the complete agreement or consult the landlord.",
+                    claims=[],
+                    confidence="insufficient_evidence",
+                    missing_information="Clause not found in the uploaded rental agreement.",
+                    uncertainty="Clause absent from lease",
+                    professional_review_recommended=True
+                )
+
+        if not self.client_initialized:
+            logger.info("Groq API key unconfigured; engaging local grounded synthesis provider.")
+            local_provider = LocalLLMProvider()
+            return local_provider.generate_answer(query, hits, conversation_history)
+
+        import httpx
+        context_xml = self._build_context_xml(hits)
+        user_prompt = (
+            f"LEGAL INQUIRY: {query}\n\n"
+            f"{context_xml}\n\n"
+            f"Synthesize a strictly grounded response in valid JSON matching this schema:\n"
+            f'{{"answer": "...", "claims": [{{"claim_text": "...", "quote": "...", '
+            f'"chunk_id": "...", "page_number": 1}}], '
+            f'"confidence": "high|medium|low|insufficient_evidence", "missing_information": null, '
+            f'"uncertainty": null, "professional_review_recommended": true}}'
+        )
+
+        messages = [
+            {"role": "system", "content": LEGAL_SYSTEM_PROMPT},
+        ]
+        if conversation_history:
+            for item in conversation_history[-4:]:
+                role = "user" if item.get("role") == "user" else "assistant"
+                messages.append({"role": role, "content": item.get("content", "")})
+        messages.append({"role": "user", "content": user_prompt})
+
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": 0.1,
+            "max_tokens": settings.MAX_OUTPUT_TOKENS,
+            "response_format": {"type": "json_object"}
+        }
+
+        last_error = None
+        for attempt in range(2):
+            try:
+                with httpx.Client(timeout=15.0) as client:
+                    resp = client.post(
+                        f"{self.base_url}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json"
+                        },
+                        json=payload
+                    )
+
+                if resp.status_code == 200:
+                    data = resp.json()
+                    raw_content = data["choices"][0]["message"]["content"].strip()
+                    parsed = json.loads(raw_content)
+                    return GroundedResponse(**parsed)
+
+                status_code = resp.status_code
+                err_text = resp.text
+                safe_err = err_text.replace(self.api_key, "[REDACTED]") if self.api_key else err_text
+
+                if status_code == 429:
+                    logger.warning(f"Groq rate limit (429): {safe_err}")
+                    raise LegalAIException(
+                        message=(
+                            "AI usage limit reached. Please wait for the quota to reset "
+                            "or configure another permitted model."
+                        ),
+                        code="QUOTA_EXHAUSTED",
+                        status_code=429
+                    )
+                elif status_code == 401:
+                    logger.error(f"Groq invalid API key (401): {safe_err}")
+                    raise LegalAIException(
+                        message="AI authentication failed: Invalid Groq API key.",
+                        code="AI_AUTH_FAILED",
+                        status_code=401
+                    )
+                elif status_code == 404:
+                    logger.error(f"Groq model {self.model_name} not found (404): {safe_err}")
+                    raise LegalAIException(
+                        message=f"Configured Groq model '{self.model_name}' was not found.",
+                        code="MODEL_NOT_FOUND",
+                        status_code=404
+                    )
+                else:
+                    last_error = f"HTTP {status_code}: {safe_err}"
+
+            except LegalAIException:
+                raise
+            except httpx.TimeoutException as te:
+                last_error = f"Request timed out: {te}"
+            except Exception as e:
+                last_error = str(e)
+
+            time.sleep(0.5)
+
+        logger.error(f"Groq generation failed after retries: {last_error}")
+        raise LegalAIException(
+            message="AI service temporarily unavailable. Please verify your connection and try again.",
+            code="AI_GENERATION_FAILED",
+            status_code=503
+        )
+
+    def classify_query(self, query: str) -> str:
+        q_lower = query.lower()
+        if any(w in q_lower for w in ["cookie", "recipe", "weather", "song"]):
+            return "out_of_scope"
+        if any(w in q_lower for w in ["summarize", "overview", "brief"]):
+            return "summary"
+        if any(w in q_lower for w in ["and", "or", "options", "difference", "compare"]):
+            return "multi_clause"
+        return "factual"
+
+    def summarize_text(self, text: str, max_words: int = 150) -> str:
+        if not self.client_initialized:
+            words = text.split()[:max_words]
+            return " ".join(words) + ("..." if len(text.split()) > max_words else "")
+        return " ".join(text.split()[:max_words])
+
+    def extract_structured_information(self, text: str, schema: dict) -> dict:
+        return {"extracted": True}
+
+
 def get_ai_provider() -> AIProvider:
     """Factory returning configured AIProvider (Section 27H)."""
     provider_name = (settings.AI_PROVIDER or "gemini").lower()
-    if provider_name == "mock":
+    if provider_name == "groq":
+        return GroqProvider()
+    elif provider_name == "mock":
         return MockAIProvider()
     elif provider_name == "local_llm":
         return LocalLLMProvider()

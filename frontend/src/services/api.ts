@@ -33,6 +33,48 @@ apiClient.interceptors.response.use(
   }
 );
 
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: string;
+    firebase_uid?: string | null;
+    email: string;
+    display_name?: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export const authApi = {
+  register: async (email: string, password: string, displayName?: string): Promise<AuthResponse> => {
+    const res = await apiClient.post<AuthResponse>('/api/v1/auth/register', {
+      email,
+      password,
+      display_name: displayName,
+    });
+    return res.data;
+  },
+
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    const res = await apiClient.post<AuthResponse>('/api/v1/auth/login', {
+      email,
+      password,
+    });
+    return res.data;
+  },
+
+  demoLogin: async (): Promise<AuthResponse> => {
+    const res = await apiClient.post<AuthResponse>('/api/v1/auth/demo-login');
+    return res.data;
+  },
+
+  getMe: async () => {
+    const res = await apiClient.get('/api/v1/auth/me');
+    return res.data;
+  },
+};
+
 export interface HealthResponse {
   status: string;
   app_name: string;

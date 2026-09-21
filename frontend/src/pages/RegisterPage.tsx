@@ -10,7 +10,7 @@ export const RegisterPage: React.FC = () => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { login, clearError } = useAuth();
+  const { registerWithCredentials, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,11 +30,10 @@ export const RegisterPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const token = `test_token_:${email.split('@')[0]}_uid:${email}:${name}`;
-      await login(token);
+      await registerWithCredentials(email, password, name);
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      setLocalError(err.message || 'Registration failed.');
+      setLocalError(err.message || 'Registration failed. Please try again.');
     } finally {
       setSubmitting(false);
     }

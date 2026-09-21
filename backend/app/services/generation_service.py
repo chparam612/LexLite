@@ -1,16 +1,17 @@
 from typing import List, Optional
 from app.core.config import settings
 from app.services.retrieval_service import RetrievalHit
+from app.core.exceptions import LegalAIException
 from app.services.ai_provider import (
     GroundedClaim,
     GroundedResponse,
     AIProvider,
     get_ai_provider,
     GeminiProvider,
+    LocalLLMProvider,
 )
 
 __all__ = ["GenerationService", "GroundedResponse", "GroundedClaim"]
-
 
 
 class GenerationService:
@@ -25,14 +26,27 @@ class GenerationService:
         model_name: Optional[str] = None,
         provider: Optional[AIProvider] = None
     ):
-        self.api_key = api_key or settings.GEMINI_API_KEY
-        self.model_name = model_name or settings.GEMINI_MODEL
         if provider:
             self.provider = provider
-        elif self.api_key and self.api_key not in ("demo-key-for-dev", "your-gemini-api-key-here", ""):
+            self.model_name = model_name or getattr(provider, "model_name", "custom")
+            self.api_key = api_key or getattr(provider, "api_key", None)
+        elif (settings.AI_PROVIDER or "").lower() == "groq":
+            self.api_key = api_key or settings.GROQ_API_KEY
+            self.model_name = model_name or settings.GROQ_MODEL
+            from app.services.ai_provider import GroqProvider
+            self.provider = GroqProvider(api_key=self.api_key, model_name=self.model_name)
+        elif api_key and api_key not in ("demo-key-for-dev", "your-gemini-api-key-here", ""):
+            self.api_key = api_key
+            self.model_name = model_name or settings.GEMINI_MODEL
+            self.provider = GeminiProvider(api_key=self.api_key, model_name=self.model_name)
+        elif settings.GEMINI_API_KEY and settings.GEMINI_API_KEY not in ("demo-key-for-dev", "your-gemini-api-key-here", ""):
+            self.api_key = settings.GEMINI_API_KEY
+            self.model_name = model_name or settings.GEMINI_MODEL
             self.provider = GeminiProvider(api_key=self.api_key, model_name=self.model_name)
         else:
             self.provider = get_ai_provider()
+            self.model_name = model_name or getattr(self.provider, "model_name", "default")
+            self.api_key = api_key or getattr(self.provider, "api_key", None)
 
     def generate_grounded_answer(
         self,
@@ -40,16 +54,22 @@ class GenerationService:
         hits: List[RetrievalHit],
         conversation_history: Optional[List[dict]] = None
     ) -> GroundedResponse:
-        """Delegate generation to active AIProvider."""
-        return self.provider.generate_answer(
-            query=query,
-            hits=hits,
-            conversation_history=conversation_history
-        )
+        """Delegate generation to active AIProvider with free-tier rate limit fallback."""
+        try:
+            return self.provider.generate_answer(
+                query=query,
+                hits=hits,
+                conversation_history=conversation_history
+            )
+        except LegalAIException as e:
+            if hits and e.code in ("QUOTA_EXHAUSTED", "AI_GENERATION_FAILED"):
+                local_provider = LocalLLMProvider()
+                return local_provider.generate_answer(query, hits, conversation_history)
+            raise
 
     def _build_context_xml(self, hits: List[RetrievalHit]) -> str:
         """Enclose retrieved chunks in secure XML tags with metadata attributes."""
-        if isinstance(self.provider, GeminiProvider):
+        if hasattr(self.provider, "_build_context_xml"):
             return self.provider._build_context_xml(hits)
         gp = GeminiProvider(api_key=self.api_key, model_name=self.model_name)
         return gp._build_context_xml(hits)

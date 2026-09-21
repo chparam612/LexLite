@@ -58,6 +58,30 @@ export const ChatPage: React.FC = () => {
     scrollToBottom();
   }, [messages, isSending]);
 
+  const extractErrorMessage = (err: any, fallback: string): string => {
+    if (err?.response?.status === 401) {
+      return 'Session expired or authentication required. Please sign in again.';
+    }
+    if (err?.response?.status === 403) {
+      return 'You are not authorized to perform this operation.';
+    }
+    if (err?.response?.status === 429) {
+      return 'AI rate limit reached. Please wait a moment before trying again.';
+    }
+    if (err?.response?.status === 503) {
+      return 'AI service is temporarily unavailable. Please retry shortly.';
+    }
+    if (!err?.response && (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK')) {
+      return 'Unable to reach backend server. Please check your network connection.';
+    }
+    return (
+      err?.response?.data?.detail ||
+      err?.response?.data?.error?.message ||
+      err?.message ||
+      fallback
+    );
+  };
+
   const loadConversations = async () => {
     try {
       setIsLoading(true);
@@ -67,7 +91,7 @@ export const ChatPage: React.FC = () => {
         setActiveConvId(list[0].id);
       }
     } catch (err) {
-      setErrorMsg('Failed to load conversations.');
+      setErrorMsg(extractErrorMessage(err, 'Failed to load research sessions.'));
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +102,7 @@ export const ChatPage: React.FC = () => {
       const detail = await getConversation(convId);
       setMessages(detail.messages || []);
     } catch (err) {
-      setErrorMsg('Failed to load message history.');
+      setErrorMsg(extractErrorMessage(err, 'Failed to load message history.'));
     }
   };
 
@@ -90,7 +114,7 @@ export const ChatPage: React.FC = () => {
       setActiveConvId(newConv.id);
       setMessages([]);
     } catch (err) {
-      setErrorMsg('Failed to create new conversation.');
+      setErrorMsg(extractErrorMessage(err, 'Failed to create new research session.'));
     }
   };
 
@@ -107,7 +131,7 @@ export const ChatPage: React.FC = () => {
         setActiveConvId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (err) {
-      setErrorMsg('Failed to delete conversation.');
+      setErrorMsg(extractErrorMessage(err, 'Failed to delete conversation.'));
     }
   };
 
@@ -124,7 +148,7 @@ export const ChatPage: React.FC = () => {
         setActiveConvId(newConv.id);
         targetConvId = newConv.id;
       } catch (err) {
-        setErrorMsg('Failed to initialize conversation.');
+        setErrorMsg(extractErrorMessage(err, 'Failed to initialize conversation.'));
         return;
       }
     }
@@ -148,7 +172,7 @@ export const ChatPage: React.FC = () => {
       const assistantMsg = await sendMessage(targetConvId, text);
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.error?.message || 'Failed to synthesize grounded answer.');
+      setErrorMsg(extractErrorMessage(err, 'Failed to synthesize grounded answer.'));
     } finally {
       setIsSending(false);
     }

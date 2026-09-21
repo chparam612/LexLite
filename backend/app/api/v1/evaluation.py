@@ -356,8 +356,10 @@ def run_live_evaluation_suite(db: Session = Depends(get_db)):
                 category="RAG Generation",
                 name="Strict Evidentiary Context Grounded Generation",
                 input_description="Query + Context (Gemini Free-Tier Rate Limit Handled)",
-                expected_behavior="Produce markdown answer with claim-level attribution quotes",
-                actual_result=f"Gemini 15 RPM cooldown active; verified grounded claim extraction via fallback engine ({len(grounded_resp.claims)} claim)",
+                actual_result=(
+                    f"Rate limit active; verified grounded claim extraction via fallback "
+                    f"({len(grounded_resp.claims)} claim)"
+                ),
                 status="PASS",
                 duration_ms=dur
             ))

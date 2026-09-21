@@ -86,6 +86,13 @@ app.add_middleware(CorrelationIdMiddleware)
 app.add_exception_handler(LegalAIException, legal_ai_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
+
+@app.on_event("startup")
+def on_startup():
+    from app.db.session import init_db
+    init_db()
+
+
 # Include Routers
 # Root health & ready endpoints (for GCP Cloud Run / Kubernetes probes, omitted from public OpenAPI spec)
 app.include_router(health_router, prefix="", include_in_schema=False)

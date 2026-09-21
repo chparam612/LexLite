@@ -36,12 +36,15 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_STORAGE_BUCKET: str = "legal-ai-documents"
     GCS_BUCKET_NAME: Optional[str] = None
 
-    # AI & Gemini (Section 27 Free-First)
-    AI_PROVIDER: str = "gemini"  # "gemini", "local_llm", "mock"
+    # AI Providers (Section 27 Free-First: Gemini, Groq, Local LLM)
+    AI_PROVIDER: str = "gemini"  # "gemini", "groq", "local_llm", "mock"
     GEMINI_API_KEY: str = "demo-key-for-dev"
     GEMINI_MODEL: str = "gemini-flash-latest"
     GEMINI_GENERATION_MODEL: str = "models/gemini-flash-latest"
     GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     EMBEDDING_PROVIDER: str = "local"  # "local", "gemini", "mock"
     LOCAL_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     VECTOR_STORE: str = "faiss"  # "faiss", "pgvector"
@@ -62,6 +65,9 @@ class Settings(BaseSettings):
     CITATION_VERIFICATION_ENABLED: bool = True
 
     # Security & CORS
+    SECRET_KEY: str = "lexlite-production-secret-jwt-key-change-in-env-2026"
+    JWT_SECRET_KEY: Optional[str] = None
+    ACCESS_TOKEN_EXPIRE_DAYS: int = 7
     CORS_ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",

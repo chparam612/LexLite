@@ -37,3 +37,34 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db():
+    """Initialize database tables and perform idempotent column migrations."""
+    from app.db.base import Base
+    import app.models  # noqa
+    from app.core.logging import logger
+    from sqlalchemy import text
+
+    Base.metadata.create_all(bind=engine)
+
+    try:
+        with engine.connect() as conn:
+            if db_url.startswith("sqlite"):
+                table_check = conn.execute(
+                    text("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
+                ).fetchone()
+                if table_check:
+                    res = conn.execute(text("PRAGMA table_info(users);")).fetchall()
+                    cols = [r[1] for r in res]
+                    if "hashed_password" not in cols:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255);"))
+                        conn.commit()
+                        logger.info("Migrated users table: added hashed_password column.")
+            elif "postgres" in db_url:
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS hashed_password VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE users ALTER COLUMN firebase_uid DROP NOT NULL;"))
+                conn.commit()
+                logger.info("PostgreSQL users table schema verified.")
+    except Exception as e:
+        logger.warning(f"Database migration check notice: {e}")

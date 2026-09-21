@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, AuthContextType } from '../types/auth';
-import { apiClient } from '../services/api';
+import { apiClient, authApi } from '../services/api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,27 +21,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       console.error('Failed to fetch user profile:', err);
 
-      // Resilient fallback for demo and test tokens during cold starts or unconfigured Firebase
-      if (authToken.startsWith('test_token_') || authToken.startsWith('mock_token_')) {
-        const parts = authToken.split(':');
-        const now = new Date().toISOString();
-        const demoUser: UserProfile = {
-          id: parts[1] || 'demo_attorney_01',
-          firebase_uid: parts[1] || 'demo_attorney_01',
-          email: parts[2] || 'attorney@legalai.example.com',
-          display_name: parts[3] || 'Sarah Jenkins, Esq.',
-          created_at: now,
-          updated_at: now,
-        };
-        setUser(demoUser);
-        setError(null);
-        return;
-      }
-
       setUser(null);
       setToken(null);
       localStorage.removeItem('auth_token');
-      setError(err?.response?.data?.detail || err?.message || 'Authentication failed');
+      setError(err?.response?.data?.detail || err?.message || 'Authentication session expired.');
     } finally {
       setIsLoading(false);
     }
@@ -71,9 +54,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchUserProfile(newToken);
   };
 
+  const loginWithCredentials = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await authApi.login(email, password);
+      localStorage.setItem('auth_token', res.access_token);
+      setToken(res.access_token);
+      setUser(res.user);
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Login failed.';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerWithCredentials = async (email: string, password: string, name: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await authApi.register(email, password, name);
+      localStorage.setItem('auth_token', res.access_token);
+      setToken(res.access_token);
+      setUser(res.user);
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Registration failed.';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loginAsDemoAttorney = async () => {
-    const demoToken = 'test_token_:demo_attorney_01:attorney@legalai.example.com:Sarah Jenkins, Esq.';
-    await login(demoToken);
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await authApi.demoLogin();
+      localStorage.setItem('auth_token', res.access_token);
+      setToken(res.access_token);
+      setUser(res.user);
+    } catch (err: any) {
+      console.warn('Demo login endpoint unreachable, falling back to local demo token:', err);
+      const demoToken = 'test_token_:demo_attorney_01:attorney@legalai.example.com:Sarah Jenkins, Esq.';
+      await login(demoToken);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
@@ -93,6 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAuthenticated: !!user,
         login,
+        loginWithCredentials,
+        registerWithCredentials,
         loginAsDemoAttorney,
         logout,
         error,

@@ -9,7 +9,7 @@ export const LoginPage: React.FC = () => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { login, loginAsDemoAttorney, error, clearError } = useAuth();
+  const { loginWithCredentials, loginAsDemoAttorney, error, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,12 +27,10 @@ export const LoginPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      // In local dev without live Firebase client config, we generate a secure development token
-      const token = `test_token_:${email.split('@')[0]}_uid:${email}:${email.split('@')[0]}`;
-      await login(token);
+      await loginWithCredentials(email, password);
       navigate(from, { replace: true });
     } catch (err: any) {
-      setLocalError(err.message || 'Login failed.');
+      setLocalError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setSubmitting(false);
     }
