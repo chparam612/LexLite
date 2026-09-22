@@ -78,6 +78,12 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_PER_MINUTE: int = 60
 
+    @field_validator("DATABASE_URL", mode="before")
+    def assemble_database_url(cls, v: Any) -> str:
+        if isinstance(v, str) and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return str(v) if v else "sqlite:///./legal_ai_dev.db"
+
     @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Any) -> List[str]:
         if isinstance(v, str):

@@ -4,8 +4,8 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: "cd backend && pip install -r requirements.txt"
-    startCommand: "cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: "if [ -d backend ]; then cd backend; fi && pip install -r requirements.txt"
+    startCommand: "if [ -d backend ]; then cd backend; fi && (alembic upgrade head || true) && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
