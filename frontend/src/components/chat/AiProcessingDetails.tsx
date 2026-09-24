@@ -15,19 +15,27 @@ import { ProcessingDetails } from '../../services/api';
 
 interface AiProcessingDetailsProps {
   details?: ProcessingDetails;
+  modelName?: string;
 }
 
-export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ details }) => {
+export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ details, modelName }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!details) return null;
 
-  const isVerified = details.verification_status === 'verified';
-  const isInsufficient = details.verification_status === 'insufficient_support';
+  const isVerified = details.verification_status === 'verified' || details.verification_status === 'supported';
+  const isInsufficient = details.verification_status === 'insufficient_support' || details.verification_status === 'insufficient_evidence';
 
-  const formatRetrievalMethod = (method: string) => {
+  const totalLatency = details.latency_ms ?? details.total_latency_ms ?? 0;
+  const candidateChunks = details.candidate_chunks ?? details.candidate_chunks_retrieved ?? 0;
+  const contextChunks = details.context_chunks ?? details.context_chunks_used ?? 0;
+  const retrievalLatency = details.retrieval_latency_ms;
+  const generationLatency = details.generation_latency_ms;
+
+  const formatRetrievalMethod = (method?: string) => {
     switch (method) {
       case 'hybrid_dense_sparse_rrf':
+      case 'hybrid':
         return 'Hybrid Dense (Embeddings) + Sparse (BM25) with RRF';
       case 'vector_search':
         return 'Dense Vector Semantic Search';
@@ -64,12 +72,12 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
             ) : (
               <>
                 <AlertCircle className="w-3 h-3 text-amber-600" />
-                {details.verification_status}
+                {details.verification_status || 'Trace Recorded'}
               </>
             )}
           </span>
           <span className="text-[10px] text-slate-400 font-mono">
-            {details.total_latency_ms.toFixed(0)}ms
+            {typeof totalLatency === 'number' ? totalLatency.toFixed(0) : '0'}ms
           </span>
         </div>
         <div className="flex items-center text-slate-400">
@@ -85,7 +93,7 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 <Database className="w-3 h-3 text-indigo-500" /> Candidate Chunks
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
-                {details.candidate_chunks_retrieved}
+                {candidateChunks}
               </div>
             </div>
 
@@ -94,7 +102,7 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 <Layers className="w-3 h-3 text-indigo-500" /> Context Injected
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
-                {details.context_chunks_used}
+                {contextChunks}
               </div>
             </div>
 
@@ -103,7 +111,9 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 <Clock className="w-3 h-3 text-indigo-500" /> Retrieval
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
-                {details.retrieval_latency_ms.toFixed(1)} ms
+                {typeof retrievalLatency === 'number'
+                  ? `${retrievalLatency.toFixed(1)} ms`
+                  : `${(typeof totalLatency === 'number' ? totalLatency : 0).toFixed(1)} ms`}
               </div>
             </div>
 
@@ -112,7 +122,9 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 <Cpu className="w-3 h-3 text-indigo-500" /> Synthesis
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
-                {details.generation_latency_ms.toFixed(1)} ms
+                {typeof generationLatency === 'number'
+                  ? `${generationLatency.toFixed(1)} ms`
+                  : (details.reranking_used ? 'RRF Fused' : 'Synthesized')}
               </div>
             </div>
           </div>
@@ -124,11 +136,11 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 {formatRetrievalMethod(details.retrieval_method)}
               </span>
             </div>
-            {details.model_name && (
+            {(modelName || details.model_name) && (
               <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                 <span className="font-semibold text-slate-700">Generative Model:</span>
                 <span className="font-mono text-[10px] text-indigo-600">
-                  {details.model_name}
+                  {modelName || details.model_name}
                 </span>
               </div>
             )}

@@ -1,5 +1,6 @@
 import abc
 import json
+import re
 import time
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -161,9 +162,9 @@ class GeminiProvider(AIProvider):
             )
 
         # Negative case check: query about topics completely absent from rental agreement (e.g., pet policy)
-        if any(term in q_lower for term in ["pet", "dog", "cat", "smoking", "sub-sublease"]):
+        if re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', q_lower):
             # Check if any retrieved hit actually mentions the topic
-            has_term = any(term in hit.content.lower() for hit in hits for term in ["pet", "dog", "cat"])
+            has_term = any(bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower())) for hit in hits)
             if not has_term:
                 return GroundedResponse(
                     answer="The uploaded document does not contain sufficient information regarding pet policies "
@@ -315,8 +316,8 @@ class LocalLLMProvider(AIProvider):
                 professional_review_recommended=True
             )
 
-        if any(term in q_lower for term in ["pet", "dog", "cat"]):
-            has_term = any(term in hit.content.lower() for hit in hits for term in ["pet", "dog", "cat"])
+        if re.search(r'\b(pets?|dogs?|cats?)\b', q_lower):
+            has_term = any(bool(re.search(r'\b(pets?|dogs?|cats?)\b', hit.content.lower())) for hit in hits)
             if not has_term:
                 return GroundedResponse(
                     answer="The uploaded document does not contain sufficient information regarding pet policies "
@@ -328,19 +329,65 @@ class LocalLLMProvider(AIProvider):
                     professional_review_recommended=True
                 )
 
-        top_hit = hits[0]
-        content_snippet = top_hit.content.strip()
-        lines = [line.strip() for line in content_snippet.split("\n") if line.strip()]
+        # Extract content words and subwords from query
+        stop_words = {
+            "what", "which", "where", "when", "who", "whom", "whose", "why", "how",
+            "does", "do", "did", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "the", "a", "an", "and", "or", "but", "if", "then",
+            "in", "on", "at", "to", "for", "with", "about", "against", "between",
+            "into", "through", "during", "before", "after", "above", "below", "from",
+            "up", "down", "out", "over", "under", "again", "further", "here", "there",
+            "all", "any", "both", "each", "few", "more", "most", "other", "some", "such",
+            "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
+            "can", "will", "just", "should", "now", "tell", "give", "explain", "describe",
+            "required", "applies", "regarding"
+        }
+        query_words = [w for w in re.findall(r'\b[a-zA-Z0-9_\$]+\b', q_lower) if w not in stop_words and len(w) > 2]
 
-        if len(lines) > 1 and len(lines[0]) < 50:
+        best_hit = hits[0]
+        if query_words and len(hits) > 1:
+            hit_scores = []
+            for hit in hits:
+                h_text = hit.content.lower()
+                h_score = sum(1 for w in query_words if w in h_text or (len(w) > 4 and w[:4] in h_text))
+                hit_scores.append((h_score, hit))
+            hit_scores.sort(key=lambda x: x[0], reverse=True)
+            if hit_scores[0][0] > 0:
+                best_hit = hit_scores[0][1]
+
+        lines = [line.strip() for line in best_hit.content.split("\n") if line.strip()]
+        candidate_body_lines = [
+            l for l in lines
+            if len(l) > 25 and not l.lower().startswith(("section ", "article ", "clause ", "schedule ", "exhibit "))
+        ]
+        if not candidate_body_lines:
+            candidate_body_lines = [l for l in lines if len(l) > 15]
+
+        best_body = None
+        best_body_score = -1
+        if query_words and candidate_body_lines:
+            for bline in candidate_body_lines:
+                b_score = sum(1 for w in query_words if w in bline.lower() or (len(w) > 4 and w[:4] in bline.lower()))
+                if b_score > best_body_score:
+                    best_body_score = b_score
+                    best_body = bline
+
+        if best_body and best_body_score > 0:
+            if len(lines) > 1 and len(lines[0]) < 50 and lines[0] != best_body:
+                excerpt = f"{lines[0]} {best_body}"
+            else:
+                excerpt = best_body[:350].strip()
+            quote = best_body[:200].strip()
+        elif len(lines) > 1 and len(lines[0]) < 50:
             excerpt = f"{lines[0]} {lines[1]}"
-            quote = lines[1]
+            quote = lines[1][:150].strip()
         else:
-            excerpt = content_snippet[:300].strip()
+            excerpt = best_hit.content[:300].strip()
             quote = excerpt[:120].strip()
 
+        heading_info = f", Section {best_hit.heading_path}" if best_hit.heading_path else ""
         answer_text = (
-            f"Based on **{top_hit.document_title}** (Page {top_hit.page_start}), "
+            f"Based on **{best_hit.document_title}** (Page {best_hit.page_start}{heading_info}), "
             f"{excerpt}"
         )
 
@@ -348,13 +395,13 @@ class LocalLLMProvider(AIProvider):
             GroundedClaim(
                 claim_text=excerpt,
                 quote=quote,
-                chunk_id=top_hit.chunk_id,
-                page_number=top_hit.page_start,
+                chunk_id=best_hit.chunk_id,
+                page_number=best_hit.page_start,
                 support_status="supported"
             )
         ]
 
-        # Multi-clause synthesis support: if query has multiple clauses (like termination and landlord default)
+        # Multi-clause synthesis support: if query has multiple clauses
         if len(hits) > 1 and ("early termination" in q_lower or "notice" in q_lower):
             second_hit = hits[1]
             sec_lines = [line_item.strip() for line_item in second_hit.content.split("\n") if line_item.strip()]
@@ -373,7 +420,7 @@ class LocalLLMProvider(AIProvider):
         return GroundedResponse(
             answer=answer_text,
             claims=claims,
-            confidence="high" if top_hit.score > 0.5 else "medium",
+            confidence="high" if best_hit.score > 0.5 or best_body_score > 0 else "medium",
             missing_information=None,
             uncertainty=None,
             professional_review_recommended=True
@@ -514,8 +561,8 @@ class GroqProvider(AIProvider):
             )
 
         # Negative case check (e.g., pet policy absent from lease)
-        if any(term in q_lower for term in ["pet", "dog", "cat", "smoking", "sub-sublease"]):
-            has_term = any(term in hit.content.lower() for hit in hits for term in ["pet", "dog", "cat"])
+        if re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', q_lower):
+            has_term = any(bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower())) for hit in hits)
             if not has_term:
                 return GroundedResponse(
                     answer="The uploaded document does not contain sufficient information regarding pet policies "

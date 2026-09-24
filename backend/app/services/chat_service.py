@@ -202,13 +202,30 @@ class ChatService:
             document_ids=doc_ids,
             top_k=5
         )
-        latency_ms = round((time.time() - t0) * 1000, 2)
+        retrieval_latency_ms = round((time.time() - t0) * 1000, 2)
+
+        # Multi-turn context: fetch previous conversation turns (limit 6)
+        past_messages = (
+            db.query(Message)
+            .filter(Message.conversation_id == conv.id, Message.id != user_msg.id)
+            .order_by(Message.created_at.desc())
+            .limit(6)
+            .all()
+        )
+        conversation_history = [
+            {"role": m.role, "content": m.content}
+            for m in reversed(past_messages)
+        ]
 
         # 3. Grounded Answer Synthesis
+        t_gen = time.time()
         grounded_resp = self.generation_service.generate_grounded_answer(
             query=clean_content,
-            hits=hits
+            hits=hits,
+            conversation_history=conversation_history
         )
+        generation_latency_ms = round((time.time() - t_gen) * 1000, 2)
+        total_latency_ms = round(retrieval_latency_ms + generation_latency_ms, 2)
 
         # 4. Store Assistant Message
         assistant_msg = Message(
@@ -228,7 +245,7 @@ class ChatService:
             query=clean_content,
             hits=hits,
             retrieval_method="hybrid",
-            latency_ms=latency_ms
+            latency_ms=retrieval_latency_ms
         )
 
         # 6. Record Citations and Claims
@@ -337,10 +354,16 @@ class ChatService:
             retrieval_method="hybrid (dense + keyword fused)",
             candidate_chunks=len(hits),
             context_chunks=len(hits),
+            candidate_chunks_retrieved=len(hits),
+            context_chunks_used=len(hits),
             reranking_used=True,
             verification_performed=True,
             verification_status=verification_status,
-            latency_ms=latency_ms
+            latency_ms=total_latency_ms,
+            total_latency_ms=total_latency_ms,
+            retrieval_latency_ms=retrieval_latency_ms,
+            generation_latency_ms=generation_latency_ms,
+            model_name=assistant_msg.model_name
         )
 
         return MessageResponse(

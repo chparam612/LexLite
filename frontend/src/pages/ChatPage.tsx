@@ -25,6 +25,7 @@ import {
   sendMessage
 } from '../services/api';
 import { AiProcessingDetails } from '../components/chat/AiProcessingDetails';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 export const ChatPage: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -304,70 +305,75 @@ export const ChatPage: React.FC = () => {
             </div>
           )}
 
-          {messages.map((msg) => {
-            const isUser = msg.role === 'user';
-            return (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm mt-0.5">
-                    AI
-                  </div>
-                )}
-
-                <div className={`max-w-2xl space-y-2.5 ${isUser ? 'items-end' : 'items-start'}`}>
-                  {/* Message Bubble */}
-                  <div
-                    className={`p-4 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                      isUser
-                        ? 'bg-indigo-600 text-white rounded-br-none'
-                        : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none'
-                    }`}
-                  >
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
-                  </div>
-
-                  {/* Assistant Citations & Claim Grounding */}
-                  {!isUser && msg.citations && msg.citations.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <Bookmark className="h-3 w-3 text-indigo-500" />
-                        <span>Evidentiary Citations ({msg.citations.length})</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {msg.citations.map((cit) => (
-                          <button
-                            key={cit.id}
-                            onClick={() => setSelectedCitation(cit)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200/80 hover:bg-amber-100 transition shadow-2xs"
-                          >
-                            <span className="font-bold text-amber-700">[{cit.citation_order}]</span>
-                            <span className="truncate max-w-[160px]">
-                              {cit.document_title || 'Document'}
-                            </span>
-                            <span className="text-amber-600">p.{cit.page_number}</span>
-                            <ExternalLink className="h-2.5 w-2.5 opacity-60 ml-0.5" />
-                          </button>
-                        ))}
-                      </div>
+          <ErrorBoundary fallbackMessage="An error occurred while displaying message history. Click below to recover.">
+            {messages.map((msg) => {
+              const isUser = msg.role === 'user';
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  {!isUser && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm mt-0.5">
+                      AI
                     </div>
                   )}
 
-                  {!isUser && msg.processing_details && (
-                    <AiProcessingDetails details={msg.processing_details} />
+                  <div className={`max-w-2xl space-y-2.5 ${isUser ? 'items-end' : 'items-start'}`}>
+                    {/* Message Bubble */}
+                    <div
+                      className={`p-4 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                        isUser
+                          ? 'bg-indigo-600 text-white rounded-br-none'
+                          : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    </div>
+
+                    {/* Assistant Citations & Claim Grounding */}
+                    {!isUser && msg.citations && msg.citations.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          <Bookmark className="h-3 w-3 text-indigo-500" />
+                          <span>Evidentiary Citations ({msg.citations.length})</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {msg.citations.map((cit) => (
+                            <button
+                              key={cit.id}
+                              onClick={() => setSelectedCitation(cit)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200/80 hover:bg-amber-100 transition shadow-2xs"
+                            >
+                              <span className="font-bold text-amber-700">[{cit.citation_order}]</span>
+                              <span className="truncate max-w-[160px]">
+                                {cit.document_title || 'Document'}
+                              </span>
+                              <span className="text-amber-600">p.{cit.page_number}</span>
+                              <ExternalLink className="h-2.5 w-2.5 opacity-60 ml-0.5" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!isUser && msg.processing_details && (
+                      <AiProcessingDetails
+                        details={msg.processing_details}
+                        modelName={msg.model_name}
+                      />
+                    )}
+                  </div>
+
+                  {isUser && (
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                      You
+                    </div>
                   )}
                 </div>
-
-                {isUser && (
-                  <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                    You
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </ErrorBoundary>
 
           {/* Typing indicator */}
           {isSending && (

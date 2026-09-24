@@ -62,7 +62,7 @@ class GenerationService:
                 conversation_history=conversation_history
             )
         except LegalAIException as e:
-            if hits and e.code in ("QUOTA_EXHAUSTED", "AI_GENERATION_FAILED"):
+            if hits and e.code in ("QUOTA_EXHAUSTED", "AI_GENERATION_FAILED", "MODEL_NOT_FOUND", "AI_AUTH_FAILED"):
                 local_provider = LocalLLMProvider()
                 return local_provider.generate_answer(query, hits, conversation_history)
             raise

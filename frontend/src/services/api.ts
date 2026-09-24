@@ -120,13 +120,18 @@ export interface Claim {
 }
 
 export interface ProcessingDetails {
-  candidate_chunks_retrieved: number;
-  context_chunks_used: number;
-  verification_status: string;
-  retrieval_method: string;
-  retrieval_latency_ms: number;
-  generation_latency_ms: number;
-  total_latency_ms: number;
+  candidate_chunks?: number;
+  candidate_chunks_retrieved?: number;
+  context_chunks?: number;
+  context_chunks_used?: number;
+  verification_status?: string;
+  verification_performed?: boolean;
+  reranking_used?: boolean;
+  retrieval_method?: string;
+  latency_ms?: number;
+  total_latency_ms?: number;
+  retrieval_latency_ms?: number;
+  generation_latency_ms?: number;
   model_name?: string;
 }
 

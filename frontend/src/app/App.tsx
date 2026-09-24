@@ -15,6 +15,7 @@ import { SettingsPage } from '../pages/SettingsPage';
 import { DemoPage } from '../pages/DemoPage';
 import { EvaluationDashboardPage } from '../pages/EvaluationDashboardPage';
 import { checkHealth } from '../services/api';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,55 +61,57 @@ export const App: React.FC = () => {
             <LegalDisclaimerBanner />
             <Navbar backendStatus={backendStatus} />
             <main className="flex-1">
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/evaluation" element={<EvaluationDashboardPage />} />
+              <ErrorBoundary fallbackMessage="A rendering error occurred in this view. Click below to recover.">
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/evaluation" element={<EvaluationDashboardPage />} />
 
-                {/* Protected routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/demo"
-                  element={
-                    <ProtectedRoute>
-                      <DemoPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/documents"
-                  element={
-                    <ProtectedRoute>
-                      <DocumentLibraryPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/chat"
-                  element={
-                    <ProtectedRoute>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <ProtectedRoute>
-                      <SettingsPage />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
+                  {/* Protected routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/demo"
+                    element={
+                      <ProtectedRoute>
+                        <DemoPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/documents"
+                    element={
+                      <ProtectedRoute>
+                        <DocumentLibraryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <SettingsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </ErrorBoundary>
             </main>
           </div>
         </BrowserRouter>

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class CitationResponse(BaseModel):
@@ -27,13 +27,30 @@ class ClaimResponse(BaseModel):
 class ProcessingDetails(BaseModel):
     retrieval_method: str = "hybrid"
     candidate_chunks: int = 0
+    candidate_chunks_retrieved: Optional[int] = None
     context_chunks: int = 0
+    context_chunks_used: Optional[int] = None
     reranking_used: bool = True
     verification_performed: bool = True
     verification_status: str = "supported"
     latency_ms: Optional[float] = None
+    total_latency_ms: Optional[float] = None
+    retrieval_latency_ms: Optional[float] = None
+    generation_latency_ms: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def sync_aliases(self) -> "ProcessingDetails":
+        if self.candidate_chunks_retrieved is None:
+            self.candidate_chunks_retrieved = self.candidate_chunks
+        if self.context_chunks_used is None:
+            self.context_chunks_used = self.context_chunks
+        if self.total_latency_ms is None:
+            self.total_latency_ms = self.latency_ms
+        if self.latency_ms is None:
+            self.latency_ms = self.total_latency_ms
+        return self
 
 
 class MessageCreate(BaseModel):
