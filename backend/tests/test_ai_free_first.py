@@ -268,6 +268,13 @@ def test_ai_017_local_mode_stack():
     assert len(results) == 1
     assert results[0][0] == "chunk-1"
 
+    from app.services.vector_store import PgVectorStore
+    pg_vs = PgVectorStore(dimensions=4)
+    pg_vs.add_vectors([[0.1, 0.2, 0.3, 0.4]], ["pg-chunk-1"])
+    pg_results = pg_vs.search([0.1, 0.2, 0.3, 0.4], top_k=1)
+    assert len(pg_results) == 1
+    assert pg_results[0][0] == "pg-chunk-1"
+
 
 # -----------------------------------------------------------------------------
 # AI-018: Mock AI provider is used only in automated tests

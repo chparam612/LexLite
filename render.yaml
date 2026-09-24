@@ -21,6 +21,10 @@ services:
         fromDatabase:
           name: legal-ai-postgres
           property: connectionString
+      - key: DATABASE_MODE
+        value: postgres
+      - key: VECTOR_STORE
+        value: pgvector
       - key: CORS_ALLOWED_ORIGINS
         value: "*"
       - key: GEMINI_API_KEY

@@ -16,7 +16,7 @@ This guide explains how to deploy the entire Legal AI platform for free with **z
                   ┌──────────────────────────────┐
                   │      Render Web Service      │
                   │   FastAPI (Python 3.11)      │
-                  │https://legal-ai-api.onrender.com
+                  │https://legal-ai-backend-crc0.onrender.com
                   └──────────────┬───────────────┘
                                  │
                                  ▼
@@ -48,7 +48,7 @@ Render allows spinning up both the backend web service and PostgreSQL database a
 6. Under Environment Variables for `legal-ai-backend`:
    - Set `GEMINI_API_KEY` to your Google AI Studio key (free at [aistudio.google.com](https://aistudio.google.com)).
 7. Click **Apply**.
-8. Once deployed, copy your backend URL (e.g., `https://legal-ai-api.onrender.com`).
+8. Once deployed, copy your backend URL (e.g., `https://legal-ai-backend-crc0.onrender.com`).
 
 ---
 
@@ -66,7 +66,7 @@ Vercel provides free, instantaneous global hosting for Vite/React applications.
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 5. Under **Environment Variables**, add:
-   - `VITE_API_BASE_URL`: Your Render backend URL (e.g., `https://legal-ai-api.onrender.com`).
+   - `VITE_API_BASE_URL`: Your Render backend URL (e.g., `https://legal-ai-backend-crc0.onrender.com`).
 6. Click **Deploy**.
 7. In ~60 seconds, your site is live at `https://<your-project>.vercel.app`.
 

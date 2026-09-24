@@ -49,8 +49,26 @@ def init_db():
     from app.core.logging import logger
     from sqlalchemy import text
 
-    Base.metadata.create_all(bind=engine)
+    # 1. On PostgreSQL, ensure required extensions exist BEFORE creating tables (e.g. pgvector for VectorType)
+    if "postgres" in db_url:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                conn.execute(text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'))
+                conn.execute(text('CREATE EXTENSION IF NOT EXISTS "pg_trgm";'))
+                conn.commit()
+                logger.info("Verified PostgreSQL extensions (vector, uuid-ossp, pg_trgm).")
+        except Exception as e:
+            logger.warning(f"PostgreSQL extension check notice: {e}")
 
+    # 2. Create tables safely
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema tables created/verified successfully.")
+    except Exception as e:
+        logger.error(f"Database table creation notice: {e}")
+
+    # 3. Perform idempotent schema migrations
     try:
         with engine.connect() as conn:
             if db_url.startswith("sqlite"):

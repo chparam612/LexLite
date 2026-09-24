@@ -2,7 +2,7 @@ from app.models.user import User
 from app.models.document import Document, DocumentVersion, DocumentPage
 from app.models.section import LegalSection
 from app.models.chunk import DocumentChunk
-from app.models.embedding import EmbeddingModel, Embedding
+from app.models.embedding import EmbeddingModel, Embedding, VectorRecord
 from app.models.conversation import Conversation, ConversationDocument, Message
 from app.models.retrieval import RetrievalRun, RetrievalResult
 from app.models.citation import Citation, AnswerClaim, ClaimEvidence
@@ -17,6 +17,7 @@ __all__ = [
     "DocumentChunk",
     "EmbeddingModel",
     "Embedding",
+    "VectorRecord",
     "Conversation",
     "ConversationDocument",
     "Message",

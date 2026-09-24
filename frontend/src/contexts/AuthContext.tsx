@@ -92,14 +92,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       setError(null);
-      const res = await authApi.demoLogin();
+      let res;
+      try {
+        res = await authApi.demoLogin();
+      } catch (firstErr: any) {
+        console.warn('First demo login attempt failed, retrying after short delay...', firstErr);
+        setError('Backend is waking up, retrying in a few seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        res = await authApi.demoLogin();
+      }
       localStorage.setItem('auth_token', res.access_token);
       setToken(res.access_token);
       setUser(res.user);
+      setError(null);
     } catch (err: any) {
-      console.warn('Demo login endpoint unreachable, falling back to local demo token:', err);
-      const demoToken = 'test_token_:demo_attorney_01:attorney@legalai.example.com:Sarah Jenkins, Esq.';
-      await login(demoToken);
+      console.error('Demo login failed after retry:', err);
+      const msg = 'Backend is waking up, retry in a few seconds.';
+      setError(msg);
+      throw new Error(msg);
     } finally {
       setIsLoading(false);
     }

@@ -31,3 +31,14 @@ class Embedding(Base):
 
     chunk = relationship("DocumentChunk", back_populates="embeddings")
     model = relationship("EmbeddingModel", back_populates="embeddings")
+
+
+class VectorRecord(Base):
+    """General vector record for persistent vector store."""
+    __tablename__ = "vector_records"
+
+    id = Column(String(128), primary_key=True)
+    vector = Column(VectorType(768), nullable=False)
+    metadata_json = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+

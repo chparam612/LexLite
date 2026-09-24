@@ -93,8 +93,19 @@ def on_startup():
         f"LEGAL AI starting up | Environment: {settings.APPLICATION_ENV} | "
         f"Storage: {settings.STORAGE_BACKEND} | AI Provider: {settings.AI_PROVIDER}"
     )
-    from app.db.session import init_db
-    init_db()
+    if settings.APPLICATION_ENV.lower() == "production":
+        api_key = getattr(settings, "GEMINI_API_KEY", "") or ""
+        if not api_key or api_key == "demo-key-for-dev":
+            logger.warning(
+                "WARNING: GEMINI_API_KEY is unset or using the default dev key ('demo-key-for-dev') "
+                "in production! Chat and AI features will fail until a valid Gemini API key is configured "
+                "in the Render Environment settings."
+            )
+    try:
+        from app.db.session import init_db
+        init_db()
+    except Exception as e:
+        logger.error(f"CRITICAL: Database initialization failed on startup: {e}")
 
 
 # Include Routers

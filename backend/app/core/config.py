@@ -1,5 +1,5 @@
 from typing import List, Union, Any, Optional
-from pydantic import field_validator, model_validator
+from pydantic import field_validator, model_validator, Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
 
@@ -68,13 +68,19 @@ class Settings(BaseSettings):
 
     # Security & CORS
     SECRET_KEY: str = "lexlite-production-secret-jwt-key-change-in-env-2026"
-    JWT_SECRET_KEY: Optional[str] = None
+    JWT_SECRET_KEY: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("JWT_SECRET_KEY", "JWT_SECRET")
+    )
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
-    CORS_ALLOWED_ORIGINS: Union[List[str], str] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000"
-    ]
+    CORS_ALLOWED_ORIGINS: Union[List[str], str] = Field(
+        default=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000"
+        ],
+        validation_alias=AliasChoices("CORS_ALLOWED_ORIGINS", "BACKEND_CORS_ORIGINS")
+    )
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_PER_MINUTE: int = 60
 

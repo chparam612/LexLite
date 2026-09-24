@@ -48,11 +48,12 @@ export const LoginPage: React.FC = () => {
 
   const handleDemoLogin = async () => {
     setSubmitting(true);
+    setLocalError(null);
     try {
       await loginAsDemoAttorney();
       navigate(from, { replace: true });
     } catch (err: any) {
-      setLocalError('Demo login failed.');
+      setLocalError(err?.message || 'Backend is waking up, retry in a few seconds.');
     } finally {
       setSubmitting(false);
     }
