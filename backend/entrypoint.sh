@@ -11,9 +11,12 @@ echo "=================================================="
 
 # Apply database migrations
 echo "Checking database schema migrations..."
-alembic upgrade head || {
-    echo "Warning: Alembic migration encountered an issue or schema is up-to-date. Continuing startup..."
-}
+if ! alembic upgrade head; then
+    echo "=================================================="
+    echo "ERROR: Alembic migration failed! Check migration logs above."
+    echo "Continuing application startup in degraded state..."
+    echo "=================================================="
+fi
 
 echo "Launching application server on port ${APP_PORT}..."
 exec uvicorn app.main:app --host 0.0.0.0 --port "${APP_PORT}"

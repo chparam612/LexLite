@@ -66,7 +66,7 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         logger.info("Database schema tables created/verified successfully.")
     except Exception as e:
-        logger.error(f"Database table creation notice: {e}")
+        logger.error(f"ERROR: Database table creation failed during init_db. App continuing in degraded state: {e}", exc_info=True)
 
     # 3. Perform idempotent schema migrations
     try:
