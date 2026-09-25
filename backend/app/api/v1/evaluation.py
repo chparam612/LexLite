@@ -56,15 +56,22 @@ def run_live_evaluation_suite(db: Session = Depends(get_db)):
     # -------------------------------------------------------------
     t0 = time.time()
     try:
-        token = "test_token_:eval_user:eval@legalai.example.com:Eval User"
+        from app.services.auth_service import AuthService
+        from app.core.security import create_access_token
+        user = AuthService.get_or_create_demo_attorney(db)
+        token = create_access_token({
+            "sub": user.id,
+            "email": user.email,
+            "name": user.display_name
+        })
         data = verify_firebase_token(token)
         dur = round((time.time() - t0) * 1000, 2)
-        if data.uid == "eval_user" and data.email == "eval@legalai.example.com":
+        if data.uid == user.id and data.email == user.email:
             results.append(TestCaseResult(
                 test_id="AUTH-001",
                 category="Authentication",
                 name="Tenant Token Verification & Identity Derivation",
-                input_description="Valid authorization bearer token for eval@legalai.example.com",
+                input_description=f"Signed JWT authorization bearer token for {user.email}",
                 expected_behavior="Resolve authenticated tenant profile with matching UID and email",
                 actual_result=f"Successfully verified tenant UID '{data.uid}' and email '{data.email}'",
                 status="PASS",
