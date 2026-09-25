@@ -164,7 +164,10 @@ class GeminiProvider(AIProvider):
         # Negative case check: query about topics completely absent from rental agreement (e.g., pet policy)
         if re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', q_lower):
             # Check if any retrieved hit actually mentions the topic
-            has_term = any(bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower())) for hit in hits)
+            has_term = any(
+                bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower()))
+                for hit in hits
+            )
             if not has_term:
                 return GroundedResponse(
                     answer="The uploaded document does not contain sufficient information regarding pet policies "
@@ -357,11 +360,13 @@ class LocalLLMProvider(AIProvider):
 
         lines = [line.strip() for line in best_hit.content.split("\n") if line.strip()]
         candidate_body_lines = [
-            l for l in lines
-            if len(l) > 25 and not l.lower().startswith(("section ", "article ", "clause ", "schedule ", "exhibit "))
+            cline for cline in lines
+            if len(cline) > 25 and not cline.lower().startswith(
+                ("section ", "article ", "clause ", "schedule ", "exhibit ")
+            )
         ]
         if not candidate_body_lines:
-            candidate_body_lines = [l for l in lines if len(l) > 15]
+            candidate_body_lines = [cline for cline in lines if len(cline) > 15]
 
         best_body = None
         best_body_score = -1
@@ -562,7 +567,10 @@ class GroqProvider(AIProvider):
 
         # Negative case check (e.g., pet policy absent from lease)
         if re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', q_lower):
-            has_term = any(bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower())) for hit in hits)
+            has_term = any(
+                bool(re.search(r'\b(pets?|dogs?|cats?|smoking|sub-sublease)\b', hit.content.lower()))
+                for hit in hits
+            )
             if not has_term:
                 return GroundedResponse(
                     answer="The uploaded document does not contain sufficient information regarding pet policies "

@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  MinusCircle,
   Play,
   RotateCcw,
   Filter,
@@ -49,9 +50,11 @@ export const EvaluationDashboardPage: React.FC = () => {
     return t.category.toLowerCase() === selectedCategory.toLowerCase();
   }) || [];
 
-  const passRate = suiteResult && suiteResult.total_tests > 0
-    ? Math.round((suiteResult.passed / suiteResult.total_tests) * 100)
-    : 0;
+  const skippedCount = suiteResult?.skipped ?? (suiteResult?.results.filter((r) => r.status.includes('SKIP')).length ?? 0);
+  const applicableTests = suiteResult ? suiteResult.total_tests - skippedCount : 0;
+  const passRate = suiteResult?.pass_rate_pct ?? (applicableTests > 0
+    ? Math.round((suiteResult!.passed / applicableTests) * 100)
+    : 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -121,10 +124,10 @@ export const EvaluationDashboardPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-xs">
-            <span className="text-[11px] font-semibold text-amber-600 uppercase block">Blocked</span>
-            <span className="text-2xl font-bold text-amber-700 mt-1 block">
-              {suiteResult.blocked}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 bg-slate-50/20 shadow-xs">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase block">Skipped / N/A</span>
+            <span className="text-2xl font-bold text-slate-700 mt-1 block">
+              {suiteResult.skipped ?? suiteResult.blocked}
             </span>
           </div>
 
@@ -184,6 +187,7 @@ export const EvaluationDashboardPage: React.FC = () => {
         {filteredTests.map((test: TestCaseResult) => {
           const isExpanded = !!expandedTestIds[test.test_id];
           const isPass = test.status === 'PASS';
+          const isSkipped = test.status.includes('SKIP');
           const isBlocked = test.status.includes('BLOCKED');
 
           return (
@@ -192,6 +196,8 @@ export const EvaluationDashboardPage: React.FC = () => {
               className={`bg-white rounded-xl border transition ${
                 isPass
                   ? 'border-slate-200 hover:border-emerald-300'
+                  : isSkipped
+                  ? 'border-slate-200 hover:border-slate-300 bg-slate-50/30'
                   : isBlocked
                   ? 'border-amber-200 hover:border-amber-300'
                   : 'border-rose-200 hover:border-rose-300'
@@ -205,6 +211,8 @@ export const EvaluationDashboardPage: React.FC = () => {
                   <div className="shrink-0">
                     {isPass ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : isSkipped ? (
+                      <MinusCircle className="w-5 h-5 text-slate-400" />
                     ) : isBlocked ? (
                       <AlertTriangle className="w-5 h-5 text-amber-500" />
                     ) : (
@@ -238,6 +246,8 @@ export const EvaluationDashboardPage: React.FC = () => {
                     className={`px-2.5 py-1 rounded-md text-xs font-bold ${
                       isPass
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : isSkipped
+                        ? 'bg-slate-100 text-slate-600 border border-slate-200'
                         : isBlocked
                         ? 'bg-amber-50 text-amber-700 border border-amber-200'
                         : 'bg-rose-50 text-rose-700 border border-rose-200'

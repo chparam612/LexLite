@@ -241,6 +241,8 @@ export interface EvaluationSummary {
   passed: number;
   failed: number;
   blocked: number;
+  skipped?: number;
+  pass_rate_pct?: number;
   execution_time_ms: number;
   results: TestCaseResult[];
 }

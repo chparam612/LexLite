@@ -41,4 +41,3 @@ class VectorRecord(Base):
     vector = Column(VectorType(768), nullable=False)
     metadata_json = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-
