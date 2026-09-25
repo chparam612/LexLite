@@ -4,6 +4,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
 
 
+def normalize_database_url(url: Any) -> str:
+    """
+    Normalize database connection URLs to ensure an explicit DBAPI driver (psycopg2) is used.
+    Handles legacy 'postgres://' and bare 'postgresql://' connection strings (common on Render)
+    by converting them to 'postgresql+psycopg2://' when '+psycopg2' or '+psycopg' is not present.
+    """
+    if not url:
+        return "sqlite:///./legal_ai_dev.db"
+    url_str = str(url).strip()
+    if url_str.startswith("postgres://"):
+        return url_str.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url_str.startswith("postgresql://") and not (
+        "+psycopg2" in url_str or "+psycopg" in url_str
+    ):
+        return url_str.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url_str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -86,9 +104,7 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     def assemble_database_url(cls, v: Any) -> str:
-        if isinstance(v, str) and v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
-        return str(v) if v else "sqlite:///./legal_ai_dev.db"
+        return normalize_database_url(v)
 
     @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Any) -> List[str]:

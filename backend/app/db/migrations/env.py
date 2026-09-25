@@ -10,7 +10,7 @@ from alembic import context
 # Ensure backend root is on Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-from app.core.config import settings
+from app.core.config import settings, normalize_database_url
 from app.db.base import Base
 import app.models  # Import all models to register with Base.metadata
 
@@ -23,10 +23,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    url = settings.DATABASE_URL
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
-    return url
+    return normalize_database_url(settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
