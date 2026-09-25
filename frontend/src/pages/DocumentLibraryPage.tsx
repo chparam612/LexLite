@@ -103,13 +103,15 @@ export const DocumentLibraryPage: React.FC = () => {
       {/* Search & Filters */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <label htmlFor="document-search" className="sr-only">Search documents</label>
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
           <input
+            id="document-search"
             type="text"
             placeholder="Search by title, jurisdiction..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:ring-slate-900 focus:border-slate-900"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-500 focus:ring-slate-900 focus:border-slate-900"
           />
         </div>
 
@@ -133,15 +135,15 @@ export const DocumentLibraryPage: React.FC = () => {
       {/* Document List */}
       {isLoading ? (
         <div className="py-16 text-center">
-          <Loader2 className="w-8 h-8 text-slate-800 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-slate-800 animate-spin mx-auto mb-3" aria-hidden="true" />
           <p className="text-sm font-medium text-slate-600">Loading your legal documents...</p>
         </div>
       ) : filteredDocs.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-xl mx-auto my-8">
           <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-6 h-6" />
+            <FileText className="w-6 h-6" aria-hidden="true" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 mb-1">No legal documents found</h3>
+          <h2 className="text-base font-bold text-slate-900 mb-1">No legal documents found</h2>
           <p className="text-xs text-slate-500 mb-6">
             {searchTerm || statusFilter !== 'all'
               ? 'No documents match your active search and filter criteria.'
@@ -151,7 +153,7 @@ export const DocumentLibraryPage: React.FC = () => {
             onClick={() => setIsUploadOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors shadow-sm"
           >
-            <Upload className="w-4 h-4 text-amber-400" />
+            <Upload className="w-4 h-4 text-amber-400" aria-hidden="true" />
             <span>Upload Document</span>
           </button>
         </div>
@@ -165,14 +167,14 @@ export const DocumentLibraryPage: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-amber-400 shrink-0">
-                    <FileText className="w-5 h-5" />
+                    <FileText className="w-5 h-5" aria-hidden="true" />
                   </div>
                   {getStatusBadge(doc.status)}
                 </div>
 
-                <h3 className="text-base font-semibold text-slate-900 line-clamp-2 mb-1" title={doc.title}>
+                <h2 className="text-base font-semibold text-slate-900 line-clamp-2 mb-1" title={doc.title}>
                   {doc.title}
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-500 mb-4">
                   {doc.jurisdiction ? `Jurisdiction: ${doc.jurisdiction} • ` : ''}
                   {doc.page_count} {doc.page_count === 1 ? 'Page' : 'Pages'} • {(doc.file_size / 1024).toFixed(0)} KB
@@ -184,26 +186,28 @@ export const DocumentLibraryPage: React.FC = () => {
                   to={`/chat?doc=${doc.id}`}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                  <MessageSquare className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
                   <span>Ask Questions</span>
                 </Link>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPreviewDoc(doc)}
+                    aria-label={`View details and download PDF for ${doc.title}`}
                     className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
                     title="View details and download PDF"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" aria-hidden="true" />
                   </button>
                   {doc.status === 'failed' && (
                     <button
                       onClick={() => retryMutation.mutate(doc.id)}
                       disabled={retryMutation.isPending}
+                      aria-label={`Retry processing for ${doc.title}`}
                       className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
                       title="Retry processing"
                     >
-                      <RotateCw className="w-4 h-4" />
+                      <RotateCw className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                   <button
@@ -213,10 +217,11 @@ export const DocumentLibraryPage: React.FC = () => {
                       }
                     }}
                     disabled={deleteMutation.isPending && deletingId === doc.id}
+                    aria-label={`Delete document ${doc.title}`}
                     className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                     title="Delete document"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

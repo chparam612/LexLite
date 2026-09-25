@@ -77,16 +77,17 @@ export const EvaluationDashboardPage: React.FC = () => {
         <button
           onClick={handleRunEvaluation}
           disabled={loading}
+          aria-label="Execute live evaluation suite"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm transition shadow-sm disabled:opacity-50"
         >
           {loading ? (
             <>
-              <RotateCcw className="w-4 h-4 animate-spin" />
+              <RotateCcw className="w-4 h-4 animate-spin" aria-hidden="true" />
               Running Live Suite...
             </>
           ) : (
             <>
-              <Play className="w-4 h-4" />
+              <Play className="w-4 h-4" aria-hidden="true" />
               Execute Evaluation Suite
             </>
           )}
@@ -95,7 +96,7 @@ export const EvaluationDashboardPage: React.FC = () => {
 
       {errorMsg && (
         <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" aria-hidden="true" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -104,42 +105,42 @@ export const EvaluationDashboardPage: React.FC = () => {
       {suiteResult && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase block">Total Tests</span>
+            <span className="text-[11px] font-semibold text-slate-600 uppercase block">Total Tests</span>
             <span className="text-2xl font-bold text-slate-900 mt-1 block">
               {suiteResult.total_tests}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-xs">
-            <span className="text-[11px] font-semibold text-emerald-600 uppercase block">Passed</span>
+            <span className="text-[11px] font-semibold text-emerald-700 uppercase block">Passed</span>
             <span className="text-2xl font-bold text-emerald-700 mt-1 block">
               {suiteResult.passed}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/20 shadow-xs">
-            <span className="text-[11px] font-semibold text-rose-600 uppercase block">Failed</span>
+            <span className="text-[11px] font-semibold text-rose-700 uppercase block">Failed</span>
             <span className="text-2xl font-bold text-rose-700 mt-1 block">
               {suiteResult.failed}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 bg-slate-50/20 shadow-xs">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase block">Skipped / N/A</span>
+            <span className="text-[11px] font-semibold text-slate-600 uppercase block">Skipped / N/A</span>
             <span className="text-2xl font-bold text-slate-700 mt-1 block">
               {suiteResult.skipped ?? suiteResult.blocked}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-indigo-200 bg-indigo-50/20 shadow-xs">
-            <span className="text-[11px] font-semibold text-indigo-600 uppercase block">Pass Rate</span>
+            <span className="text-[11px] font-semibold text-indigo-700 uppercase block">Pass Rate</span>
             <span className="text-2xl font-bold text-indigo-700 mt-1 block">
               {passRate}%
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase block">Suite Duration</span>
+            <span className="text-[11px] font-semibold text-slate-600 uppercase block">Suite Duration</span>
             <span className="text-2xl font-bold text-slate-900 mt-1 block">
               {suiteResult.execution_time_ms.toFixed(0)} ms
             </span>
@@ -150,8 +151,8 @@ export const EvaluationDashboardPage: React.FC = () => {
       {/* Category Filter Pills */}
       {suiteResult && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs">
-          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-slate-500 font-semibold shrink-0">Filter:</span>
+          <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
+          <span className="text-slate-600 font-semibold shrink-0">Filter:</span>
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat;
             const count = cat === 'ALL'
@@ -162,6 +163,7 @@ export const EvaluationDashboardPage: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
+                aria-pressed={isSelected}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition shrink-0 inline-flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-slate-900 text-white shadow-xs'
@@ -204,19 +206,29 @@ export const EvaluationDashboardPage: React.FC = () => {
               }`}
             >
               <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`Test ${test.test_id}: ${test.name}, status ${test.status}. Click to ${isExpanded ? 'collapse' : 'expand'} details.`}
                 onClick={() => toggleExpand(test.test_id)}
-                className="p-4 flex items-center justify-between cursor-pointer select-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleExpand(test.test_id);
+                  }
+                }}
+                className="p-4 flex items-center justify-between cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-xl"
               >
                 <div className="flex items-center gap-3">
                   <div className="shrink-0">
                     {isPass ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      <CheckCircle2 className="w-5 h-5 text-emerald-700" aria-hidden="true" />
                     ) : isSkipped ? (
-                      <MinusCircle className="w-5 h-5 text-slate-400" />
+                      <MinusCircle className="w-5 h-5 text-slate-400" aria-hidden="true" />
                     ) : isBlocked ? (
-                      <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      <AlertTriangle className="w-5 h-5 text-amber-500" aria-hidden="true" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-rose-600" />
+                      <XCircle className="w-5 h-5 text-rose-600" aria-hidden="true" />
                     )}
                   </div>
 
@@ -225,7 +237,7 @@ export const EvaluationDashboardPage: React.FC = () => {
                       <span className="font-mono text-xs font-bold text-slate-700">
                         {test.test_id}
                       </span>
-                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-300" aria-hidden="true">•</span>
                       <span className="text-xs font-semibold text-slate-900">
                         {test.name}
                       </span>
@@ -238,7 +250,7 @@ export const EvaluationDashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono text-slate-600">
                     {test.duration_ms.toFixed(1)} ms
                   </span>
 
@@ -256,8 +268,8 @@ export const EvaluationDashboardPage: React.FC = () => {
                     {test.status}
                   </span>
 
-                  <div className="text-slate-400">
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  <div className="text-slate-600">
+                    {isExpanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
                   </div>
                 </div>
               </div>

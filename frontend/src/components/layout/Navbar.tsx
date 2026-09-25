@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ backendStatus = 'healthy' }) => 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-sm group-hover:bg-slate-800 transition-colors">
-            <Scale className="w-5 h-5 text-amber-400" />
+            <Scale className="w-5 h-5 text-amber-400" aria-hidden="true" />
           </div>
           <div>
             <span className="font-bold text-lg text-slate-900 tracking-tight block">
@@ -48,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ backendStatus = 'healthy' }) => 
               to="/demo"
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold transition"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
               Demo Hub
             </Link>
             <Link to="/evaluation" className="hover:text-slate-900 transition-colors">
@@ -62,22 +62,23 @@ export const Navbar: React.FC<NavbarProps> = ({ backendStatus = 'healthy' }) => 
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-            <Activity className="w-3.5 h-3.5 text-emerald-500" />
+            <Activity className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
             <span>API {backendStatus === 'healthy' ? 'Online' : 'Checking'}</span>
           </div>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800">
-                <UserIcon className="w-3.5 h-3.5 text-slate-500" />
+                <UserIcon className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
                 <span className="max-w-[140px] truncate">{user?.display_name || user?.email}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                aria-label="Sign Out"
+                className="p-2 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                 title="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           ) : (

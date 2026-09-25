@@ -21,7 +21,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold mb-3 border border-emerald-200">
-              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <UserCheck className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />
               <span>Authenticated Workspace</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
@@ -36,14 +36,14 @@ export const DashboardPage: React.FC = () => {
               to="/documents"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
             >
-              <Upload className="w-4 h-4 text-amber-400" />
+              <Upload className="w-4 h-4 text-amber-400" aria-hidden="true" />
               <span>Upload Document</span>
             </Link>
             <Link
               to="/chat"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
             >
-              <MessageSquare className="w-4 h-4 text-slate-500" />
+              <MessageSquare className="w-4 h-4 text-slate-500" aria-hidden="true" />
               <span>Start Analysis</span>
             </Link>
           </div>
@@ -55,7 +55,7 @@ export const DashboardPage: React.FC = () => {
         <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Total Documents</span>
-            <FileText className="w-5 h-5 text-slate-400" />
+            <FileText className="w-5 h-5 text-slate-400" aria-hidden="true" />
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900">1</span>
@@ -66,18 +66,18 @@ export const DashboardPage: React.FC = () => {
         <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Verified Citations</span>
-            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            <ShieldCheck className="w-5 h-5 text-emerald-700" aria-hidden="true" />
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900">100%</span>
-            <span className="text-xs text-emerald-600 font-medium">zero ungrounded claims</span>
+            <span className="text-xs text-emerald-700 font-medium">zero ungrounded claims</span>
           </div>
         </div>
 
         <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Active Chats</span>
-            <Clock className="w-5 h-5 text-slate-400" />
+            <Clock className="w-5 h-5 text-slate-400" aria-hidden="true" />
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900">1</span>
@@ -92,14 +92,14 @@ export const DashboardPage: React.FC = () => {
           <h2 className="text-base font-semibold text-slate-900">Recent Documents</h2>
           <Link to="/documents" className="text-sm font-medium text-slate-900 hover:text-slate-700 inline-flex items-center gap-1">
             <span>View Library</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
           </Link>
         </div>
         <div className="p-6">
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-amber-400">
-                <FileText className="w-5 h-5" />
+                <FileText className="w-5 h-5" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Master Services Agreement (Demo)</h3>

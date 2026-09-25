@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="p-6 m-4 max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-red-200 text-center">
           <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-            <AlertCircle className="w-6 h-6" />
+            <AlertCircle className="w-6 h-6" aria-hidden="true" />
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-1">
             Something went wrong
@@ -55,13 +55,15 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={this.handleReset}
+              aria-label="Try recovering from error"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-sm"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
               Try Again
             </button>
             <button
               onClick={() => window.location.reload()}
+              aria-label="Reload entire page"
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition"
             >
               Reload Page

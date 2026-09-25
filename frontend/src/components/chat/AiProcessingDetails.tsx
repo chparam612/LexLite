@@ -49,11 +49,14 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
   return (
     <div className="mt-2 text-xs border border-slate-200 rounded-lg overflow-hidden bg-slate-50/70 transition-all">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-label="Toggle AI grounding and processing trace details"
         className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-slate-100/70 text-slate-600 transition"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
           <span className="font-semibold text-slate-700">AI Grounding & Processing Trace</span>
           <span
             className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
@@ -66,22 +69,22 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
           >
             {isVerified ? (
               <>
-                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                <ShieldCheck className="w-3 h-3 text-emerald-700" aria-hidden="true" />
                 Verified Grounded
               </>
             ) : (
               <>
-                <AlertCircle className="w-3 h-3 text-amber-600" />
+                <AlertCircle className="w-3 h-3 text-amber-700" aria-hidden="true" />
                 {details.verification_status || 'Trace Recorded'}
               </>
             )}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">
+          <span className="text-[10px] text-slate-600 font-mono">
             {typeof totalLatency === 'number' ? totalLatency.toFixed(0) : '0'}ms
           </span>
         </div>
-        <div className="flex items-center text-slate-400">
-          {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <div className="flex items-center text-slate-600">
+          {isOpen ? <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" /> : <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />}
         </div>
       </button>
 
@@ -89,8 +92,8 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
         <div className="p-3 border-t border-slate-200 bg-white space-y-2.5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="p-2 rounded bg-slate-50 border border-slate-100">
-              <div className="text-[10px] font-medium text-slate-500 uppercase flex items-center gap-1">
-                <Database className="w-3 h-3 text-indigo-500" /> Candidate Chunks
+              <div className="text-[10px] font-medium text-slate-600 uppercase flex items-center gap-1">
+                <Database className="w-3 h-3 text-indigo-500" aria-hidden="true" /> Candidate Chunks
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
                 {candidateChunks}
@@ -98,8 +101,8 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
             </div>
 
             <div className="p-2 rounded bg-slate-50 border border-slate-100">
-              <div className="text-[10px] font-medium text-slate-500 uppercase flex items-center gap-1">
-                <Layers className="w-3 h-3 text-indigo-500" /> Context Injected
+              <div className="text-[10px] font-medium text-slate-600 uppercase flex items-center gap-1">
+                <Layers className="w-3 h-3 text-indigo-500" aria-hidden="true" /> Context Injected
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
                 {contextChunks}
@@ -107,8 +110,8 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
             </div>
 
             <div className="p-2 rounded bg-slate-50 border border-slate-100">
-              <div className="text-[10px] font-medium text-slate-500 uppercase flex items-center gap-1">
-                <Clock className="w-3 h-3 text-indigo-500" /> Retrieval
+              <div className="text-[10px] font-medium text-slate-600 uppercase flex items-center gap-1">
+                <Clock className="w-3 h-3 text-indigo-500" aria-hidden="true" /> Retrieval
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
                 {typeof retrievalLatency === 'number'
@@ -118,8 +121,8 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
             </div>
 
             <div className="p-2 rounded bg-slate-50 border border-slate-100">
-              <div className="text-[10px] font-medium text-slate-500 uppercase flex items-center gap-1">
-                <Cpu className="w-3 h-3 text-indigo-500" /> Synthesis
+              <div className="text-[10px] font-medium text-slate-600 uppercase flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-indigo-500" aria-hidden="true" /> Synthesis
               </div>
               <div className="text-sm font-bold text-slate-800 mt-0.5">
                 {typeof generationLatency === 'number'
@@ -144,8 +147,8 @@ export const AiProcessingDetails: React.FC<AiProcessingDetailsProps> = ({ detail
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 pt-1 text-[10px] text-slate-500 border-t border-slate-100">
-              <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+            <div className="flex items-center gap-1.5 pt-1 text-[10px] text-slate-600 border-t border-slate-100">
+              <Zap className="w-3 h-3 text-amber-500 shrink-0" aria-hidden="true" />
               <span>
                 Real-time dynamic synthesis strictly anchored to retrieved document citations. No canned responses.
               </span>

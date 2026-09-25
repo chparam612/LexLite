@@ -115,7 +115,7 @@ export const AiPipelineVisualization: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
+            <Sparkles className="w-5 h-5 text-indigo-600" aria-hidden="true" />
             <h2 className="text-lg font-bold text-slate-900">How Legal AI Works: 9-Stage Architecture</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
@@ -126,13 +126,13 @@ export const AiPipelineVisualization: React.FC = () => {
         {/* Legend */}
         <div className="flex items-center gap-2 text-[11px] font-medium">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-600" /> GenAI (Gemini)
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-600" aria-hidden="true" /> GenAI (Gemini)
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Deterministic / Rules
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" aria-hidden="true" /> Deterministic / Rules
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-600" /> Hybrid Search
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-600" aria-hidden="true" /> Hybrid Search
           </span>
         </div>
       </div>
@@ -146,6 +146,8 @@ export const AiPipelineVisualization: React.FC = () => {
             <button
               key={stage.id}
               onClick={() => setSelectedStage(stage)}
+              aria-pressed={isSelected}
+              aria-label={`Pipeline Stage 0${stage.id}: ${stage.title} (${stage.type})`}
               className={`p-3 rounded-lg border text-left transition relative flex flex-col justify-between h-28 group ${
                 isSelected
                   ? 'border-indigo-600 ring-2 ring-indigo-100 bg-indigo-50/40 shadow-xs'
@@ -153,7 +155,7 @@ export const AiPipelineVisualization: React.FC = () => {
               }`}
             >
               <div className="flex items-center justify-between w-full">
-                <span className="text-[10px] font-mono font-bold text-slate-400">
+                <span className="text-[10px] font-mono font-bold text-slate-600">
                   0{stage.id}
                 </span>
                 <span
@@ -174,6 +176,7 @@ export const AiPipelineVisualization: React.FC = () => {
                   className={`w-4 h-4 mb-1 ${
                     isSelected ? 'text-indigo-600' : 'text-slate-600 group-hover:text-slate-900'
                   }`}
+                  aria-hidden="true"
                 />
                 <div className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2">
                   {stage.title}
@@ -182,7 +185,7 @@ export const AiPipelineVisualization: React.FC = () => {
 
               {idx < stages.length - 1 && (
                 <div className="hidden lg:block absolute -right-2 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300" aria-hidden="true" />
                 </div>
               )}
             </button>
@@ -194,14 +197,14 @@ export const AiPipelineVisualization: React.FC = () => {
       <div className="p-4 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/50 via-white to-purple-50/30">
         <div className="flex items-start gap-4">
           <div className="p-3 rounded-lg bg-indigo-600 text-white shadow-xs shrink-0">
-            {React.createElement(selectedStage.icon, { className: 'w-6 h-6' })}
+            {React.createElement(selectedStage.icon, { className: 'w-6 h-6', 'aria-hidden': 'true' })}
           </div>
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold text-indigo-600 uppercase">
                 Stage 0{selectedStage.id}
               </span>
-              <span className="text-slate-300">•</span>
+              <span className="text-slate-300" aria-hidden="true">•</span>
               <h3 className="text-sm font-bold text-slate-900">{selectedStage.title}</h3>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -218,8 +221,8 @@ export const AiPipelineVisualization: React.FC = () => {
             <p className="text-xs text-slate-700 leading-relaxed">
               {selectedStage.description}
             </p>
-            <div className="pt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-              <Info className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <div className="pt-2 flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
+              <Info className="w-3.5 h-3.5 text-indigo-500 shrink-0" aria-hidden="true" />
               <span>{selectedStage.technicalDetails}</span>
             </div>
           </div>

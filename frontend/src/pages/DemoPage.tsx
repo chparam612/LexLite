@@ -141,7 +141,7 @@ export const DemoPage: React.FC = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-semibold uppercase tracking-wider">
-            <Award className="w-3.5 h-3.5 text-amber-400" />
+            <Award className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
             Judging & Evaluation Suite
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
@@ -156,14 +156,15 @@ export const DemoPage: React.FC = () => {
               href="#test-cases"
               className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition shadow-sm inline-flex items-center gap-1.5"
             >
-              <Play className="w-3.5 h-3.5" />
+              <Play className="w-3.5 h-3.5" aria-hidden="true" />
               Explore 8 Demo Test Cases
             </a>
             <button
               onClick={() => navigate('/evaluation')}
+              aria-label="Run Full Automated Evaluation"
               className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition inline-flex items-center gap-1.5"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
               Run Full Automated Evaluation
             </button>
           </div>
@@ -175,7 +176,7 @@ export const DemoPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
+              <FileText className="w-5 h-5 text-indigo-600" aria-hidden="true" />
               <h2 className="text-lg font-bold text-slate-900">Synthetic Demo Document (Section 25A)</h2>
             </div>
             <p className="text-xs text-slate-500 mt-1">
@@ -190,15 +191,16 @@ export const DemoPage: React.FC = () => {
               rel="noreferrer"
               className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition inline-flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
               Download Sample PDF
             </a>
             <button
               onClick={handleLoadSample}
               disabled={loadingSample}
+              aria-label="Load and index sample residential rental agreement"
               className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-xs disabled:opacity-50"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
               {loadingSample ? 'Indexing Document...' : sampleLoaded ? 'Re-load Sample Document' : '1-Click Load & Index Document'}
             </button>
           </div>
@@ -206,26 +208,26 @@ export const DemoPage: React.FC = () => {
 
         {loadMessage && (
           <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle className="w-4 h-4 text-emerald-700 shrink-0" aria-hidden="true" />
             <span>{loadMessage}</span>
           </div>
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-4 rounded-lg border border-slate-100">
           <div>
-            <span className="text-slate-400 block font-medium">Document Title:</span>
+            <span className="text-slate-600 block font-medium">Document Title:</span>
             <span className="font-semibold text-slate-800">Sample Residential Rental Agreement</span>
           </div>
           <div>
-            <span className="text-slate-400 block font-medium">Scope:</span>
+            <span className="text-slate-600 block font-medium">Scope:</span>
             <span className="font-semibold text-slate-800">6 Pages, 15 Distinct Clauses</span>
           </div>
           <div>
-            <span className="text-slate-400 block font-medium">Parties:</span>
+            <span className="text-slate-600 block font-medium">Parties:</span>
             <span className="font-semibold text-slate-800">Apex Property Mgmt & Jane Doe</span>
           </div>
           <div>
-            <span className="text-slate-400 block font-medium">Synthetic Disclaimer:</span>
+            <span className="text-slate-600 block font-medium">Synthetic Disclaimer:</span>
             <span className="font-semibold text-emerald-700">Non-confidential / Clear Watermark</span>
           </div>
         </div>
@@ -259,26 +261,27 @@ export const DemoPage: React.FC = () => {
                 <h3 className="font-bold text-sm text-slate-900">{tc.name}</h3>
 
                 <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
-                  <span className="text-slate-400 block font-semibold text-[10px] uppercase">Judges Prompt:</span>
+                  <span className="text-slate-600 block font-semibold text-[10px] uppercase">Judges Prompt:</span>
                   <span className="text-slate-800 italic">&ldquo;{tc.prompt}&rdquo;</span>
                 </div>
 
                 <div className="text-xs text-slate-600">
-                  <span className="text-slate-400 block font-semibold text-[10px] uppercase">Expected AI Behavior:</span>
+                  <span className="text-slate-600 block font-semibold text-[10px] uppercase">Expected AI Behavior:</span>
                   <span>{tc.expectedBehavior}</span>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">Section 26 Criteria</span>
+                <span className="text-[11px] text-slate-600">Section 26 Criteria</span>
                 <button
                   onClick={() => handleRunTestCase(tc)}
                   disabled={runningTestId === tc.id}
+                  aria-label={`Execute demo test case ${tc.id}: ${tc.name} in chat`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition disabled:opacity-50"
                 >
-                  <Play className="w-3 h-3" />
+                  <Play className="w-3 h-3" aria-hidden="true" />
                   {runningTestId === tc.id ? 'Running in Chat...' : 'Execute Test in Chat'}
-                  <ArrowRight className="w-3 h-3" />
+                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </button>
               </div>
             </div>
